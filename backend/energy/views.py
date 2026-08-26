@@ -252,3 +252,46 @@ def simulate_scenario(request):
         'baseline': baseline,
         'result': result,
     })    
+
+@api_view(['GET'])
+def analytics_summary(request):
+    """
+    Computes high-level KPIs from stored generation/load data,
+    for the Analytics page.
+    """
+    generation_records = GenerationData.objects.all()
+    load_records = LoadData.objects.all()
+
+    total_solar = sum(g.solar_generation for g in generation_records)
+    total_wind = sum(g.wind_generation for g in generation_records)
+    total_renewable = total_solar + total_wind
+    total_load = sum(l.consumption for l in load_records)
+
+    # Renewable utilization: how much of total load was covered by renewables
+    if total_load > 0:
+        renewable_utilization = round(min(total_renewable / total_load, 1) * 100, 1)
+    else:
+        renewable_utilization = None
+
+        # Energy wastage: renewable generation that exceeded load (simplified, assumes no storage/export)
+    energy_wastage = round(max(total_renewable - total_load, 0), 1) if generation_records else None
+
+    # Cost savings: renewable kWh used instead of grid, at an assumed grid rate
+    GRID_RATE_PER_KWH = 8  # INR, adjustable assumption
+    renewable_used = min(total_renewable, total_load) if total_load else 0
+    cost_savings = round(renewable_used * GRID_RATE_PER_KWH, 2) if generation_records else None
+
+    # CO2 savings: renewable kWh used * emission factor avoided
+    CO2_FACTOR_KG_PER_KWH = 0.82  # approx grid emission factor
+    co2_savings = round(renewable_used * CO2_FACTOR_KG_PER_KWH, 2) if generation_records else None
+
+    return Response({
+        'renewable_utilization_percent': renewable_utilization,
+        'energy_wastage_kwh': energy_wastage,
+        'cost_savings_inr': cost_savings,
+        'co2_savings_kg': co2_savings,
+        'assumptions': {
+            'grid_rate_per_kwh': GRID_RATE_PER_KWH,
+            'co2_factor_kg_per_kwh': CO2_FACTOR_KG_PER_KWH,
+        }
+    })
