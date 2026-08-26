@@ -165,3 +165,39 @@ def forecast_summary(request):
         'comparison': comparison,
         'accuracy': accuracy,
     })
+
+@api_view(['GET'])
+def energy_management_summary(request):
+    """
+    Returns current energy flow snapshot plus recent decision history,
+    for the Energy Management page.
+    """
+    generation = GenerationData.objects.first()
+    load = LoadData.objects.first()
+    battery = BatteryData.objects.first()
+
+    recent_decisions = EnergyDecision.objects.order_by('-timestamp')[:10]
+
+    flow = {
+        'solar_generation_kw': generation.solar_generation if generation else None,
+        'wind_generation_kw': generation.wind_generation if generation else None,
+        'load_kw': load.consumption if load else None,
+        'battery_soc_percent': battery.soc if battery else None,
+        'battery_charge_kw': battery.charge_power if battery else None,
+        'battery_discharge_kw': battery.discharge_power if battery else None,
+    }
+
+    decision_log = [
+        {
+            'timestamp': d.timestamp,
+            'source_selection': d.source_selection,
+            'battery_action': d.battery_action,
+            'grid_action': d.grid_action,
+            'reason': d.reason,
+        } for d in recent_decisions
+    ]
+
+    return Response({
+        'current_flow': flow,
+        'decision_log': decision_log,
+    })
