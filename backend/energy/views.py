@@ -113,3 +113,55 @@ def alerts_summary(request):
         'alert_history': AlertSerializer(history, many=True).data,
         'active_count': active.count(),
     })
+
+@api_view(['GET'])
+def forecast_summary(request):
+    """
+    Returns recent forecasts alongside actual generation/load data
+    for comparison, plus simple accuracy metrics.
+    """
+    forecasts = Forecast.objects.order_by('-timestamp')[:24]
+
+    comparison = []
+    total_error_solar = 0
+    total_error_wind = 0
+    total_error_load = 0
+    count = 0
+
+    for f in forecasts:
+        actual_gen = GenerationData.objects.filter(timestamp=f.timestamp).first()
+        actual_load = LoadData.objects.filter(timestamp=f.timestamp).first()
+
+        actual_solar = actual_gen.solar_generation if actual_gen else None
+        actual_wind = actual_gen.wind_generation if actual_gen else None
+        actual_load_val = actual_load.consumption if actual_load else None
+
+        if actual_solar is not None:
+            total_error_solar += abs(f.predicted_solar - actual_solar)
+        if actual_wind is not None:
+            total_error_wind += abs(f.predicted_wind - actual_wind)
+        if actual_load_val is not None:
+            total_error_load += abs(f.predicted_load - actual_load_val)
+        if actual_solar is not None or actual_wind is not None or actual_load_val is not None:
+            count += 1
+
+        comparison.append({
+            'timestamp': f.timestamp,
+            'predicted_solar': f.predicted_solar,
+            'actual_solar': actual_solar,
+            'predicted_wind': f.predicted_wind,
+            'actual_wind': actual_wind,
+            'predicted_load': f.predicted_load,
+            'actual_load': actual_load_val,
+        })
+
+    accuracy = {
+        'avg_solar_error': round(total_error_solar / count, 2) if count else None,
+        'avg_wind_error': round(total_error_wind / count, 2) if count else None,
+        'avg_load_error': round(total_error_load / count, 2) if count else None,
+    }
+
+    return Response({
+        'comparison': comparison,
+        'accuracy': accuracy,
+    })

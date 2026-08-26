@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     WeatherDataViewSet, GenerationDataViewSet, LoadDataViewSet,
     BatteryDataViewSet, ForecastViewSet, EnergyDecisionViewSet,
-    AlertViewSet, SimulationScenarioViewSet, alerts_summary, live_status
+    AlertViewSet, SimulationScenarioViewSet, alerts_summary, live_status,
+    forecast_summary
 )
 
 router = DefaultRouter()
@@ -19,4 +20,5 @@ router.register(r'scenarios', SimulationScenarioViewSet)
 urlpatterns = [
     path('status/live/', live_status),
     path('alerts/summary/', alerts_summary),
+    path('forecast/summary/', forecast_summary),
 ] + router.urls
