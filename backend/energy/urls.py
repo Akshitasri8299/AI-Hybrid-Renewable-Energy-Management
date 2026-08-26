@@ -4,7 +4,7 @@ from .views import (
     WeatherDataViewSet, GenerationDataViewSet, LoadDataViewSet,
     BatteryDataViewSet, ForecastViewSet, EnergyDecisionViewSet,
     AlertViewSet, SimulationScenarioViewSet, alerts_summary, live_status,
-        forecast_summary, energy_management_summary
+        forecast_summary, energy_management_summary, simulate_scenario
     )
 
 router = DefaultRouter()
@@ -22,4 +22,5 @@ urlpatterns = [
     path('alerts/summary/', alerts_summary),
     path('forecast/summary/', forecast_summary),
     path('energy-management/summary/', energy_management_summary),
+    path('simulate/', simulate_scenario),
 ] + router.urls

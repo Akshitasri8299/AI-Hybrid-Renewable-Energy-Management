@@ -201,3 +201,54 @@ def energy_management_summary(request):
         'current_flow': flow,
         'decision_log': decision_log,
     })
+
+@api_view(['GET'])
+def simulate_scenario(request):
+    """
+    Accepts a scenario name via query param (?scenario=cloudy_day)
+    and returns simulated energy values for that scenario.
+    """
+    scenario = request.GET.get('scenario', '').lower()
+
+    baseline = {
+        'solar_generation_kw': 60,
+        'wind_generation_kw': 20,
+        'load_kw': 50,
+        'battery_soc_percent': 70,
+        'grid_import_kw': 0,
+    }
+
+    result = dict(baseline)
+    description = ''
+
+    if scenario == 'cloudy_day':
+        result['solar_generation_kw'] = round(baseline['solar_generation_kw'] * 0.2, 1)
+        description = 'Solar output drops sharply due to heavy cloud cover.'
+    elif scenario == 'high_demand':
+        result['load_kw'] = round(baseline['load_kw'] * 1.8, 1)
+        description = 'Load demand spikes well above normal levels.'
+    elif scenario == 'low_wind':
+        result['wind_generation_kw'] = round(baseline['wind_generation_kw'] * 0.15, 1)
+        description = 'Wind generation drops due to low wind speeds.'
+    elif scenario == 'low_battery':
+        result['battery_soc_percent'] = 15
+        description = 'Battery state of charge is critically low.'
+    elif scenario == 'grid_outage':
+        result['grid_import_kw'] = 0
+        description = 'Grid connection is unavailable; system relies fully on renewables and battery.'
+    else:
+        return Response({'error': 'Unknown scenario. Use one of: cloudy_day, high_demand, low_wind, low_battery, grid_outage'}, status=400)
+
+    total_generation = result['solar_generation_kw'] + result['wind_generation_kw']
+    net_balance = round(total_generation - result['load_kw'], 1)
+
+    result['total_generation_kw'] = round(total_generation, 1)
+    result['net_balance_kw'] = net_balance
+    result['status'] = 'surplus' if net_balance >= 0 else 'deficit'
+
+    return Response({
+        'scenario': scenario,
+        'description': description,
+        'baseline': baseline,
+        'result': result,
+    })    
