@@ -59,9 +59,52 @@ function WhatIfSimulation() {
 
       <div className="placeholder-box">
         <h3>📈 Simulation Result</h3>
+
         {loading && <p>Loading simulation result...</p>}
-        {!loading && result && <p>{JSON.stringify(result)}</p>}
-        {!loading && !result && <p>Select a scenario above to see simulated results</p>}
+
+        {!loading && !result && (
+          <p>Select a scenario above to see simulated results</p>
+        )}
+
+        {!loading && result && (
+          <div>
+            <p style={{ color: "#94a3b8", marginBottom: "16px" }}>
+              {result.description}
+            </p>
+
+            <div className="section-row">
+              <div className="placeholder-box">
+                <h3>📍 Baseline (Normal)</h3>
+                <p>Solar: {result.baseline.solar_generation_kw} kW</p>
+                <p>Wind: {result.baseline.wind_generation_kw} kW</p>
+                <p>Load: {result.baseline.load_kw} kW</p>
+                <p>Battery: {result.baseline.battery_soc_percent} %</p>
+                <p>Grid Import: {result.baseline.grid_import_kw} kW</p>
+              </div>
+
+              <div className="placeholder-box">
+                <h3>⚡ Simulated Result</h3>
+                <p>Solar: {result.result.solar_generation_kw} kW</p>
+                <p>Wind: {result.result.wind_generation_kw} kW</p>
+                <p>Load: {result.result.load_kw} kW</p>
+                <p>Battery: {result.result.battery_soc_percent} %</p>
+                <p>Total Generation: {result.result.total_generation_kw} kW</p>
+                <p>Net Balance: {result.result.net_balance_kw} kW</p>
+                <p>
+                  Status:{" "}
+                  <strong
+                    style={{
+                      color:
+                        result.result.status === "deficit" ? "#f87171" : "#4ade80",
+                    }}
+                  >
+                    {result.result.status}
+                  </strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

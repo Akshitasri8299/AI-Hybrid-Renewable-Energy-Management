@@ -2,14 +2,25 @@ import { useState, useEffect } from "react";
 
 function FaultsAlerts() {
   const [alerts, setAlerts] = useState([]);
+  const [rawData, setRawData] = useState(null);
 
   useEffect(() => {
-    // Fetching alerts data from Jyoti's alerts/summary endpoint
     fetch("http://127.0.0.1:8000/api/alerts/summary/")
       .then((response) => response.json())
       .then((result) => {
-        setAlerts(result);
+        setRawData(result);
         console.log("Alerts data received:", result);
+
+        // Handle different possible response shapes safely
+        if (Array.isArray(result)) {
+          setAlerts(result);
+        } else if (result && Array.isArray(result.alerts)) {
+          setAlerts(result.alerts);
+        } else if (result && Array.isArray(result.results)) {
+          setAlerts(result.results);
+        } else {
+          setAlerts([]); // fallback so .map never breaks
+        }
       })
       .catch((error) => {
         console.error("Error connecting to alerts/summary endpoint:", error);
@@ -44,6 +55,14 @@ function FaultsAlerts() {
           <p>Abnormal generation/battery-degradation flags will appear here</p>
         </div>
       </div>
+
+      {/* Temporary debug view - remove once we confirm the data shape */}
+      {rawData && (
+        <div className="placeholder-box">
+          <h3>🔧 Raw API Response (debug)</h3>
+          <p>{JSON.stringify(rawData)}</p>
+        </div>
+      )}
     </div>
   );
 }
