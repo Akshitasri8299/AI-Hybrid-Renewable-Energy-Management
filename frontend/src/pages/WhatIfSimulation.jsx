@@ -2,14 +2,40 @@ import { useState } from "react";
 
 function WhatIfSimulation() {
   const [selectedScenario, setSelectedScenario] = useState(null);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const scenarios = [
-    "Cloudy Day",
-    "High Demand",
-    "Low Wind",
-    "Low Battery",
-    "Grid Outage",
+    "cloudy_day",
+    "high_demand",
+    "low_wind",
+    "low_battery",
+    "grid_outage",
   ];
+
+  const scenarioLabels = {
+    cloudy_day: "Cloudy Day",
+    high_demand: "High Demand",
+    low_wind: "Low Wind",
+    low_battery: "Low Battery",
+    grid_outage: "Grid Outage",
+  };
+
+  const runSimulation = (scenario) => {
+    setSelectedScenario(scenario);
+    setLoading(true);
+    fetch(`http://127.0.0.1:8000/api/simulate/?scenario=${scenario}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setResult(data);
+        setLoading(false);
+        console.log("Simulation result:", data);
+      })
+      .catch((error) => {
+        console.error("Error connecting to simulate endpoint:", error);
+        setLoading(false);
+      });
+  };
 
   return (
     <div className="page">
@@ -23,9 +49,9 @@ function WhatIfSimulation() {
             <button
               key={scenario}
               className={selectedScenario === scenario ? "scenario-btn active" : "scenario-btn"}
-              onClick={() => setSelectedScenario(scenario)}
+              onClick={() => runSimulation(scenario)}
             >
-              {scenario}
+              {scenarioLabels[scenario]}
             </button>
           ))}
         </div>
@@ -33,11 +59,9 @@ function WhatIfSimulation() {
 
       <div className="placeholder-box">
         <h3>📈 Simulation Result</h3>
-        <p>
-          {selectedScenario
-            ? `Results for "${selectedScenario}" will appear here once the simulation engine is connected`
-            : "Select a scenario above to see simulated results"}
-        </p>
+        {loading && <p>Loading simulation result...</p>}
+        {!loading && result && <p>{JSON.stringify(result)}</p>}
+        {!loading && !result && <p>Select a scenario above to see simulated results</p>}
       </div>
     </div>
   );
