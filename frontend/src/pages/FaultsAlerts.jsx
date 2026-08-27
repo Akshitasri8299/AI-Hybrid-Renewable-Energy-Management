@@ -1,5 +1,20 @@
+import { useState, useEffect } from "react";
+
 function FaultsAlerts() {
-  const alerts = []; // empty for now — will be filled from API later
+  const [alerts, setAlerts] = useState([]);
+
+  useEffect(() => {
+    // Fetching alerts data from Jyoti's alerts/summary endpoint
+    fetch("http://127.0.0.1:8000/api/alerts/summary/")
+      .then((response) => response.json())
+      .then((result) => {
+        setAlerts(result);
+        console.log("Alerts data received:", result);
+      })
+      .catch((error) => {
+        console.error("Error connecting to alerts/summary endpoint:", error);
+      });
+  }, []);
 
   return (
     <div className="page">
@@ -13,7 +28,7 @@ function FaultsAlerts() {
         ) : (
           <ul>
             {alerts.map((alert, index) => (
-              <li key={index}>{alert}</li>
+              <li key={index}>{alert.message || JSON.stringify(alert)}</li>
             ))}
           </ul>
         )}
