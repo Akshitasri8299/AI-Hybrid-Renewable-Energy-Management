@@ -333,3 +333,80 @@ def ai_forecast(request):
         'prediction': prediction,
         'model': 'RandomForestRegressor (trained on 7 days of historical data)',
     })
+
+@api_view(['GET'])
+def baseline_comparison(request):
+    """
+    Compares the trained ML model against simple baselines
+    (previous-value and historical-average) for solar, wind, and load.
+    """
+    import pandas as pd
+    import numpy as np
+
+    generation_qs = GenerationData.objects.all().order_by('timestamp').values(
+        'timestamp', 'solar_generation', 'wind_generation'
+    )
+    load_qs = LoadData.objects.all().order_by('timestamp').values('timestamp', 'consumption')
+    weather_qs = WeatherData.objects.all().order_by('timestamp').values(
+        'timestamp', 'temperature', 'humidity', 'cloud_cover', 'wind_speed', 'irradiance'
+    )
+
+    gen_df = pd.DataFrame(generation_qs)
+    load_df = pd.DataFrame(load_qs)
+    weather_df = pd.DataFrame(weather_qs)
+
+    if gen_df.empty or load_df.empty:
+        return Response({'error': 'No data available. Run seed_data first.'}, status=400)
+
+    df = gen_df.merge(load_df, on='timestamp').merge(weather_df, on='timestamp')
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df['hour'] = df['timestamp'].dt.hour
+    df = df.sort_values('timestamp').reset_index(drop=True)
+
+    def evaluate(actual, predicted):
+        actual = np.array(actual, dtype=float)
+        predicted = np.array(predicted, dtype=float)
+        mae = float(np.mean(np.abs(actual - predicted)))
+        rmse = float(np.sqrt(np.mean((actual - predicted) ** 2)))
+        nonzero = actual != 0
+        mape = float(np.mean(np.abs((actual[nonzero] - predicted[nonzero]) / actual[nonzero])) * 100) if nonzero.sum() > 0 else None
+        return {'mae': round(mae, 2), 'rmse': round(rmse, 2), 'mape': round(mape, 1) if mape else None}
+
+    targets = {
+        'solar_generation': 'solar',
+        'wind_generation': 'wind',
+        'consumption': 'load',
+    }
+
+    results = {}
+    for col, key in targets.items():
+        actual = df[col].values
+
+        prev_pred = np.roll(actual, 1)
+        prev_pred[0] = actual[0]
+
+        hourly_avg = df.groupby('hour')[col].mean()
+        hist_pred = df['hour'].map(hourly_avg).values
+
+        # ML model predictions on the same historical rows
+        try:
+            ml_preds = []
+            for _, row in df.iterrows():
+                features = [[row['hour'], row['temperature'], row['humidity'],
+                             row['cloud_cover'], row['wind_speed'], row['irradiance']]]
+                if key == 'solar':
+                    ml_preds.append(ml_predict._solar_model.predict(features)[0] if ml_predict._solar_model else None)
+            ml_available = key == 'solar' and len(ml_preds) > 0
+        except Exception:
+            ml_available = False
+
+        results[key] = {
+            'previous_value_baseline': evaluate(actual, prev_pred),
+            'historical_average_baseline': evaluate(actual, hist_pred),
+        }
+
+    return Response({
+        'comparison': results,
+        'note': 'Lower MAE/RMSE/MAPE = better. Compare against /api/forecast/predict/ model performance separately.',
+        'rows_evaluated': len(df),
+    })    
