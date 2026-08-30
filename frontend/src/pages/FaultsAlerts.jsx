@@ -29,7 +29,10 @@ function FaultsAlerts() {
         ) : (
           <ul>
             {activeAlerts.map((alert, index) => (
-              <li key={index}>{alert.message || JSON.stringify(alert)}</li>
+              <li key={index}>
+                 <strong>{alert.alert_type}</strong> — {alert.severity} severity
+                 {alert.actual_value !== null && ` (value: ${alert.actual_value})`}
+              </li>
             ))}
           </ul>
         )}
@@ -43,7 +46,10 @@ function FaultsAlerts() {
           ) : (
             <ul>
               {alertHistory.map((alert, index) => (
-                <li key={index}>{alert.message || JSON.stringify(alert)}</li>
+              <li key={index}>
+                 <strong>{alert.alert_type}</strong> — {alert.severity} severity
+                 {alert.actual_value !== null && ` (value: ${alert.actual_value})`}
+              </li>
               ))}
             </ul>
           )}

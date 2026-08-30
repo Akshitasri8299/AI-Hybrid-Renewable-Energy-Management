@@ -1,3 +1,4 @@
+from . import ml_predict
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -294,4 +295,41 @@ def analytics_summary(request):
             'grid_rate_per_kwh': GRID_RATE_PER_KWH,
             'co2_factor_kg_per_kwh': CO2_FACTOR_KG_PER_KWH,
         }
+    })
+@api_view(['GET'])
+def ai_forecast(request):
+    """
+    Real AI-based forecast using the trained ML models.
+    Uses the most recent weather reading, or accepts overrides via query params.
+    Example: /api/forecast/predict/?hour=14&temperature=28&cloud_cover=20
+    """
+    latest_weather = WeatherData.objects.first()
+
+    def get_param(name, default):
+        val = request.GET.get(name)
+        return float(val) if val is not None else default
+
+    hour = int(get_param('hour', latest_weather.timestamp.hour if latest_weather else 12))
+    temperature = get_param('temperature', latest_weather.temperature if latest_weather else 25)
+    humidity = get_param('humidity', latest_weather.humidity if latest_weather else 50)
+    cloud_cover = get_param('cloud_cover', latest_weather.cloud_cover if latest_weather else 30)
+    wind_speed = get_param('wind_speed', latest_weather.wind_speed if latest_weather else 6)
+    irradiance = get_param('irradiance', latest_weather.irradiance if latest_weather else 400)
+
+    try:
+        prediction = ml_predict.predict(hour, temperature, humidity, cloud_cover, wind_speed, irradiance)
+    except FileNotFoundError:
+        return Response({'error': 'Models not trained yet. Run train_forecast_model.py first.'}, status=500)
+
+    return Response({
+        'inputs': {
+            'hour': hour,
+            'temperature': temperature,
+            'humidity': humidity,
+            'cloud_cover': cloud_cover,
+            'wind_speed': wind_speed,
+            'irradiance': irradiance,
+        },
+        'prediction': prediction,
+        'model': 'RandomForestRegressor (trained on 7 days of historical data)',
     })
