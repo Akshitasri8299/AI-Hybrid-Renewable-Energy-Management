@@ -162,7 +162,7 @@ function Forecast() {
             </div>
 
             <button className="scenario-btn active" onClick={runPrediction} disabled={predictLoading}>
-              {predictLoading ? "Predicting..." : "Get Prediction"}
+              {predictLoading ? "Predicting..." : "Predict Next Hour"}
             </button>
 
             {predictError && (

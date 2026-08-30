@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 function EnergyManagement() {
   const [flow, setFlow] = useState(null);
   const [decisionLog, setDecisionLog] = useState([]);
+  const [aiDecision, setAiDecision] = useState(null);
+  const [aiLoading, setAiLoading] = useState(true);
+  const [aiError, setAiError] = useState(null);
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/energy-management/summary/")
@@ -15,6 +18,22 @@ function EnergyManagement() {
       .catch((error) => {
         console.error("Error connecting to energy-management/summary endpoint:", error);
       });
+
+    fetch("http://127.0.0.1:8000/api/decision/live/")
+      .then((response) => {
+        if (!response.ok) throw new Error("Server error");
+        return response.json();
+      })
+      .then((result) => {
+        console.log("AI decision received:", result);
+        setAiDecision(result.decision || null);
+        setAiLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error connecting to decision/live endpoint:", error);
+        setAiError("Unable to load AI recommendation. Please check that the backend server is running.");
+        setAiLoading(false);
+      });
   }, []);
 
   const showValue = (val, unit) => (val === null || val === undefined ? "--" : `${val} ${unit}`);
@@ -23,6 +42,42 @@ function EnergyManagement() {
     <div className="page">
       <h1>Energy Management</h1>
       <p className="page-subtitle">Source selection, battery scheduling and grid usage</p>
+
+      {/* AI Recommendation Card */}
+      <div className="placeholder-box" style={{ borderColor: "#38bdf8" }}>
+        <h3>🤖 Current AI Recommendation</h3>
+        {aiLoading && <p>Loading AI recommendation...</p>}
+        {aiError && <p style={{ color: "#f87171" }}>{aiError}</p>}
+        {!aiLoading && !aiError && aiDecision && (
+          <div>
+            <div className="card-grid" style={{ marginBottom: "16px" }}>
+              <div>
+                <p style={{ color: "#94a3b8", marginBottom: "4px" }}>Source Selection</p>
+                <p style={{ fontWeight: 600 }}>{aiDecision.source_selection || "--"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#94a3b8", marginBottom: "4px" }}>Battery Action</p>
+                <p style={{ fontWeight: 600 }}>{aiDecision.battery_action || "--"}</p>
+              </div>
+              <div>
+                <p style={{ color: "#94a3b8", marginBottom: "4px" }}>Grid Action</p>
+                <p style={{ fontWeight: 600 }}>{aiDecision.grid_action || "--"}</p>
+              </div>
+            </div>
+            <div
+              style={{
+                backgroundColor: "#0f172a",
+                border: "1px solid #334155",
+                borderRadius: "8px",
+                padding: "12px 16px",
+              }}
+            >
+              <p style={{ color: "#94a3b8", marginBottom: "4px", fontSize: "0.85rem" }}>Reason</p>
+              <p style={{ color: "#e2e8f0" }}>{aiDecision.reason || "No reason provided"}</p>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="placeholder-box">
         <h3>⚡ Energy Flow</h3>
@@ -58,14 +113,7 @@ function EnergyManagement() {
         </div>
         <div className="placeholder-box">
           <h3>🏭 Grid Usage</h3>
-          {decisionLog.length > 0 ? (
-          <>
-          <p>Current Status: <strong>{decisionLog[0].grid_action}</strong></p>
-          <p style={{ color: "#94a3b8", fontSize: "0.9em" }}>{decisionLog[0].reason}</p>
-          </>
-          ) : (
-          <p>No grid data yet</p>
-          )}
+          <p>Grid fallback status will appear here</p>
         </div>
       </div>
 
@@ -76,11 +124,7 @@ function EnergyManagement() {
         ) : (
           <ul>
             {decisionLog.map((entry, index) => (
-              <li key={index} style={{ marginBottom: "12px" }}>
-              <strong>{entry.source_selection}</strong> | Battery: {entry.battery_action} | Grid: {entry.grid_action}
-              <br />
-              <span style={{ color: "#94a3b8", fontSize: "0.9em" }}>{entry.reason}</span>
-              </li>
+              <li key={index}>{entry.message || JSON.stringify(entry)}</li>
             ))}
           </ul>
         )}
