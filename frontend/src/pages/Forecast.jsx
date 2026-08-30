@@ -50,13 +50,14 @@ function Forecast() {
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={data.comparison}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                  <XAxis dataKey="time" stroke="#94a3b8" />
+                  <XAxis dataKey="timestamp" stroke="#94a3b8" tickFormatter={(t) => new Date(t).getHours() + ":00"} />
                   <YAxis stroke="#94a3b8" />
                   <Tooltip contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155" }} />
                   <Legend />
-                  <Line type="monotone" dataKey="solar" stroke="#facc15" name="Solar (kW)" />
-                  <Line type="monotone" dataKey="wind" stroke="#38bdf8" name="Wind (kW)" />
-                  <Line type="monotone" dataKey="load" stroke="#f87171" name="Load (kW)" />
+                  <Line type="monotone" dataKey="predicted_solar" stroke="#facc15" name="Predicted Solar (kW)" />
+                  <Line type="monotone" dataKey="actual_solar" stroke="#fbbf24" strokeDasharray="4 2" name="Actual Solar (kW)" />
+                  <Line type="monotone" dataKey="predicted_load" stroke="#f87171" name="Predicted Load (kW)" />
+                  <Line type="monotone" dataKey="actual_load" stroke="#fca5a5" strokeDasharray="4 2" name="Actual Load (kW)" />
                 </LineChart>
               </ResponsiveContainer>
             )}

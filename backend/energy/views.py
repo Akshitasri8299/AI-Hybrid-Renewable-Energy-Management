@@ -122,7 +122,7 @@ def forecast_summary(request):
     Returns recent forecasts alongside actual generation/load data
     for comparison, plus simple accuracy metrics.
     """
-    forecasts = Forecast.objects.order_by('-timestamp')[:24]
+    forecasts = Forecast.objects.order_by('-timestamp')[:24][::-1]
 
     comparison = []
     total_error_solar = 0
