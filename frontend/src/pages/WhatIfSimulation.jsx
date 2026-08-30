@@ -4,6 +4,7 @@ function WhatIfSimulation() {
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const scenarios = [
     "cloudy_day",
@@ -24,8 +25,12 @@ function WhatIfSimulation() {
   const runSimulation = (scenario) => {
     setSelectedScenario(scenario);
     setLoading(true);
+    setError(null);
     fetch(`http://127.0.0.1:8000/api/simulate/?scenario=${scenario}`)
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) throw new Error("Server error");
+        return response.json();
+      })
       .then((data) => {
         setResult(data);
         setLoading(false);
@@ -33,9 +38,12 @@ function WhatIfSimulation() {
       })
       .catch((error) => {
         console.error("Error connecting to simulate endpoint:", error);
+        setError("Unable to run simulation. Please check that the backend server is running.");
         setLoading(false);
       });
   };
+
+  const showValue = (val) => (val === null || val === undefined ? "--" : val);
 
   return (
     <div className="page">
@@ -50,6 +58,7 @@ function WhatIfSimulation() {
               key={scenario}
               className={selectedScenario === scenario ? "scenario-btn active" : "scenario-btn"}
               onClick={() => runSimulation(scenario)}
+              disabled={loading}
             >
               {scenarioLabels[scenario]}
             </button>
@@ -60,13 +69,15 @@ function WhatIfSimulation() {
       <div className="placeholder-box">
         <h3>📈 Simulation Result</h3>
 
-        {loading && <p>Loading simulation result...</p>}
+        {error && <p style={{ color: "#f87171" }}>{error}</p>}
 
-        {!loading && !result && (
+        {!error && loading && <p>Loading simulation result...</p>}
+
+        {!error && !loading && !result && (
           <p>Select a scenario above to see simulated results</p>
         )}
 
-        {!loading && result && (
+        {!error && !loading && result && (
           <div>
             <p style={{ color: "#94a3b8", marginBottom: "16px" }}>
               {result.description}
@@ -75,21 +86,21 @@ function WhatIfSimulation() {
             <div className="section-row">
               <div className="placeholder-box">
                 <h3>📍 Baseline (Normal)</h3>
-                <p>Solar: {result.baseline.solar_generation_kw} kW</p>
-                <p>Wind: {result.baseline.wind_generation_kw} kW</p>
-                <p>Load: {result.baseline.load_kw} kW</p>
-                <p>Battery: {result.baseline.battery_soc_percent} %</p>
-                <p>Grid Import: {result.baseline.grid_import_kw} kW</p>
+                <p>Solar: {showValue(result.baseline.solar_generation_kw)} kW</p>
+                <p>Wind: {showValue(result.baseline.wind_generation_kw)} kW</p>
+                <p>Load: {showValue(result.baseline.load_kw)} kW</p>
+                <p>Battery: {showValue(result.baseline.battery_soc_percent)} %</p>
+                <p>Grid Import: {showValue(result.baseline.grid_import_kw)} kW</p>
               </div>
 
               <div className="placeholder-box">
                 <h3>⚡ Simulated Result</h3>
-                <p>Solar: {result.result.solar_generation_kw} kW</p>
-                <p>Wind: {result.result.wind_generation_kw} kW</p>
-                <p>Load: {result.result.load_kw} kW</p>
-                <p>Battery: {result.result.battery_soc_percent} %</p>
-                <p>Total Generation: {result.result.total_generation_kw} kW</p>
-                <p>Net Balance: {result.result.net_balance_kw} kW</p>
+                <p>Solar: {showValue(result.result.solar_generation_kw)} kW</p>
+                <p>Wind: {showValue(result.result.wind_generation_kw)} kW</p>
+                <p>Load: {showValue(result.result.load_kw)} kW</p>
+                <p>Battery: {showValue(result.result.battery_soc_percent)} %</p>
+                <p>Total Generation: {showValue(result.result.total_generation_kw)} kW</p>
+                <p>Net Balance: {showValue(result.result.net_balance_kw)} kW</p>
                 <p>
                   Status:{" "}
                   <strong
