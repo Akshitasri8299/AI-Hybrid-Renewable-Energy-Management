@@ -58,7 +58,14 @@ function EnergyManagement() {
         </div>
         <div className="placeholder-box">
           <h3>🏭 Grid Usage</h3>
-          <p>Grid fallback status will appear here</p>
+          {decisionLog.length > 0 ? (
+          <>
+          <p>Current Status: <strong>{decisionLog[0].grid_action}</strong></p>
+          <p style={{ color: "#94a3b8", fontSize: "0.9em" }}>{decisionLog[0].reason}</p>
+          </>
+          ) : (
+          <p>No grid data yet</p>
+          )}
         </div>
       </div>
 
@@ -69,7 +76,11 @@ function EnergyManagement() {
         ) : (
           <ul>
             {decisionLog.map((entry, index) => (
-              <li key={index}>{entry.message || JSON.stringify(entry)}</li>
+              <li key={index} style={{ marginBottom: "12px" }}>
+              <strong>{entry.source_selection}</strong> | Battery: {entry.battery_action} | Grid: {entry.grid_action}
+              <br />
+              <span style={{ color: "#94a3b8", fontSize: "0.9em" }}>{entry.reason}</span>
+              </li>
             ))}
           </ul>
         )}
