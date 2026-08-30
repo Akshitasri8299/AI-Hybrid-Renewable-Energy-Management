@@ -170,19 +170,24 @@ function Forecast() {
             )}
 
             {prediction && !predictLoading && (
-              <div className="card-grid" style={{ marginTop: "20px" }}>
-                <div>
-                  <p style={{ color: "#94a3b8", marginBottom: "4px" }}>Predicted Solar</p>
-                  <p style={{ fontWeight: 600 }}>{showValue(prediction.solar_generation_kw)} kW</p>
+              <div>
+                <div className="card-grid" style={{ marginTop: "20px" }}>
+                  <div>
+                    <p style={{ color: "#94a3b8", marginBottom: "4px" }}>Predicted Solar</p>
+                    <p style={{ fontWeight: 600 }}>{showValue(prediction.prediction?.predicted_solar)} kW</p>
+                  </div>
+                  <div>
+                    <p style={{ color: "#94a3b8", marginBottom: "4px" }}>Predicted Wind</p>
+                    <p style={{ fontWeight: 600 }}>{showValue(prediction.prediction?.predicted_wind)} kW</p>
+                  </div>
+                  <div>
+                    <p style={{ color: "#94a3b8", marginBottom: "4px" }}>Predicted Load</p>
+                    <p style={{ fontWeight: 600 }}>{showValue(prediction.prediction?.predicted_load)} kW</p>
+                  </div>
                 </div>
-                <div>
-                  <p style={{ color: "#94a3b8", marginBottom: "4px" }}>Predicted Wind</p>
-                  <p style={{ fontWeight: 600 }}>{showValue(prediction.wind_generation_kw)} kW</p>
-                </div>
-                <div>
-                  <p style={{ color: "#94a3b8", marginBottom: "4px" }}>Predicted Load</p>
-                  <p style={{ fontWeight: 600 }}>{showValue(prediction.load_kw)} kW</p>
-                </div>
+                <p style={{ color: "#64748b", fontSize: "0.85rem", marginTop: "12px" }}>
+                  Model: {prediction.model}
+                </p>
               </div>
             )}
           </div>
