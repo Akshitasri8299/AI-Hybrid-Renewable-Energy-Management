@@ -1,3 +1,4 @@
+from . import decision_engine
 from . import ml_predict
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -409,4 +410,34 @@ def baseline_comparison(request):
         'comparison': results,
         'note': 'Lower MAE/RMSE/MAPE = better. Compare against /api/forecast/predict/ model performance separately.',
         'rows_evaluated': len(df),
+    })    
+
+@api_view(['GET'])
+def live_decision(request):
+    """
+    Runs the Energy Management Engine on the latest data
+    and returns the recommended decision with full reasoning.
+    """
+    generation = GenerationData.objects.first()
+    load = LoadData.objects.first()
+    battery = BatteryData.objects.first()
+
+    if not generation or not load or not battery:
+        return Response({'error': 'Not enough data available.'}, status=400)
+
+    decision = decision_engine.make_decision(
+        solar_kw=generation.solar_generation,
+        wind_kw=generation.wind_generation,
+        load_kw=load.consumption,
+        battery_soc_percent=battery.soc,
+    )
+
+    return Response({
+        'inputs': {
+            'solar_kw': generation.solar_generation,
+            'wind_kw': generation.wind_generation,
+            'load_kw': load.consumption,
+            'battery_soc_percent': battery.soc,
+        },
+        'decision': decision,
     })    
