@@ -58,10 +58,10 @@ function Analytics() {
       <p className="page-subtitle">Historical trends, cost savings and performance comparison</p>
 
       <div className="card-grid">
-        <StatusCard title="Renewable Utilization" value={data ? showValue(data.renewable_utilization) : "--"} unit="%" icon="🌱" />
-        <StatusCard title="Energy Wastage" value={data ? showValue(data.energy_wastage) : "--"} unit="kWh" icon="⚡" />
-        <StatusCard title="Cost Savings" value={data ? showValue(data.cost_savings) : "--"} unit="₹" icon="💰" />
-        <StatusCard title="CO₂ Savings" value={data ? showValue(data.co2_savings) : "--"} unit="kg" icon="🌍" />
+        <StatusCard title="Renewable Utilization" value={data ? showValue(data.renewable_utilization_percent) : "--"} unit="%" icon="🌱" />
+        <StatusCard title="Energy Wastage" value={data ? showValue(data.energy_wastage_kwh) : "--"} unit="kWh" icon="⚡" />
+        <StatusCard title="Cost Savings" value={data ? showValue(data.cost_savings_inr) : "--"} unit="₹" icon="💰" />
+        <StatusCard title="CO₂ Savings" value={data ? showValue(data.co2_savings_kg) : "--"} unit="kg" icon="🌍" />
       </div>
 
       <div className="placeholder-box">
