@@ -23,11 +23,11 @@ function Dashboard() {
       <p className="page-subtitle">Live overview of the microgrid</p>
 
       <div className="card-grid">
-        <StatusCard title="Solar Generation" value={data ? data.solar : "--"} unit="kW" icon="☀️" />
-        <StatusCard title="Wind Generation" value={data ? data.wind : "--"} unit="kW" icon="🌬️" />
-        <StatusCard title="Load Demand" value={data ? data.load : "--"} unit="kW" icon="🔌" />
-        <StatusCard title="Battery SOC" value={data ? data.battery : "--"} unit="%" icon="🔋" />
-        <StatusCard title="Grid Status" value={data ? data.grid : "--"} unit="kW" icon="🏭" />
+        <StatusCard title="Solar Generation" value={data ? data.solar_generation_kw : "--"} unit="kW" icon="☀️" />
+        <StatusCard title="Wind Generation" value={data ? data.wind_generation_kw : "--"} unit="kW" icon="🌬️" />
+        <StatusCard title="Load Demand" value={data ? data.load_kw : "--"} unit="kW" icon="🔌" />
+        <StatusCard title="Battery SOC" value={data && data.battery ? data.battery.soc_percent : "--"} unit="%" icon="🔋" />
+        <StatusCard title="Grid Status" value={data && data.current_decision ? data.current_decision.grid_action : "--"} unit="" icon="🏭" />
       </div>
 
       <div className="section-row">
