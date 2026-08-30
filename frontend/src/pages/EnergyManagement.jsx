@@ -124,7 +124,15 @@ function EnergyManagement() {
         ) : (
           <ul>
             {decisionLog.map((entry, index) => (
-              <li key={index}>{entry.message || JSON.stringify(entry)}</li>
+              <li key={index} style={{ marginBottom: "10px" }}>
+                <strong style={{ textTransform: "capitalize" }}>{entry.source_selection}</strong>
+                {" — battery: "}
+                {entry.battery_action}
+                {", grid: "}
+                {entry.grid_action}
+                <br />
+                <span style={{ color: "#94a3b8" }}>{entry.reason}</span>
+              </li>
             ))}
           </ul>
         )}
