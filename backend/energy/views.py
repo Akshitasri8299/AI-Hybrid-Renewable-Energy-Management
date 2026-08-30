@@ -441,3 +441,23 @@ def live_decision(request):
         },
         'decision': decision,
     })    
+
+@api_view(['GET'])
+def test_decision(request):
+    """
+    Test the decision engine with custom input values via query params.
+    Example: /api/decision/test/?solar=60&wind=20&load=40&battery=50
+    """
+    solar = float(request.GET.get('solar', 0))
+    wind = float(request.GET.get('wind', 0))
+    load = float(request.GET.get('load', 50))
+    battery = float(request.GET.get('battery', 50))
+
+    decision = decision_engine.make_decision(
+        solar_kw=solar, wind_kw=wind, load_kw=load, battery_soc_percent=battery
+    )
+
+    return Response({
+        'inputs': {'solar_kw': solar, 'wind_kw': wind, 'load_kw': load, 'battery_soc_percent': battery},
+        'decision': decision,
+    })    
