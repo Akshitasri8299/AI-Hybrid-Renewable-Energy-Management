@@ -1,3 +1,4 @@
+from . import forecast_optimizer
 from . import decision_engine
 from . import ml_predict
 from rest_framework import viewsets
@@ -476,5 +477,43 @@ def test_decision(request):
 
     return Response({
         'inputs': {'solar_kw': solar, 'wind_kw': wind, 'load_kw': load, 'battery_soc_percent': battery},
+        'decision': decision,
+    })    
+
+@api_view(['GET'])
+def optimized_decision(request):
+    """
+    Forecast-aware version of the live decision endpoint.
+    Looks at the next few forecasted hours before deciding
+    how aggressively to charge/discharge the battery.
+    """
+    generation = GenerationData.objects.first()
+    load = LoadData.objects.first()
+    battery = BatteryData.objects.first()
+
+    if not generation or not load or not battery:
+        return Response({'error': 'Not enough data available.'}, status=400)
+
+    upcoming = list(
+    Forecast.objects.order_by('-timestamp')[:3]
+    .values('target_time', 'predicted_solar', 'predicted_wind', 'predicted_load')
+    )
+
+    decision = forecast_optimizer.optimize_decision(
+        solar_kw=generation.solar_generation,
+        wind_kw=generation.wind_generation,
+        load_kw=load.consumption,
+        battery_soc_percent=battery.soc,
+        upcoming_forecasts=upcoming,
+    )
+
+    return Response({
+        'inputs': {
+            'solar_kw': generation.solar_generation,
+            'wind_kw': generation.wind_generation,
+            'load_kw': load.consumption,
+            'battery_soc_percent': battery.soc,
+        },
+        'upcoming_forecasts_used': upcoming,
         'decision': decision,
     })    
