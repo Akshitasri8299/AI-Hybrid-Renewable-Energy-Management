@@ -122,7 +122,7 @@ function EnergyManagement() {
         {decisionLog.length === 0 ? (
           <p>No decisions recorded yet</p>
         ) : (
-          <ul>
+          <ul style={{ maxHeight: "280px", overflowY: "auto", paddingRight: "8px" }}>
             {decisionLog.map((entry, index) => (
               <li key={index} style={{ marginBottom: "10px" }}>
                 <strong style={{ textTransform: "capitalize" }}>{entry.source_selection}</strong>

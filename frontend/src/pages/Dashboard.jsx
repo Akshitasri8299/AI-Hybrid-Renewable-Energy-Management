@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import StatusCard from "../components/StatusCard";
 
 function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [forecastPreview, setForecastPreview] = useState(null);
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/status/live/")
@@ -21,6 +23,15 @@ function Dashboard() {
         console.error("Error connecting to status/live endpoint:", error);
         setError("Unable to load dashboard data. Please check that the backend server is running.");
         setLoading(false);
+      });
+
+    fetch("http://127.0.0.1:8000/api/forecast/summary/")
+      .then((response) => response.json())
+      .then((result) => {
+        setForecastPreview(result.comparison || []);
+      })
+      .catch((error) => {
+        console.error("Error connecting to forecast/summary endpoint:", error);
       });
   }, []);
 
@@ -67,7 +78,19 @@ function Dashboard() {
 
           <div className="placeholder-box">
             <h3>Forecast Preview</h3>
-            <p>Forecast chart will appear here (Week 2)</p>
+            {forecastPreview && forecastPreview.length > 0 ? (
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart data={forecastPreview}>
+                  <XAxis dataKey="timestamp" tick={false} stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" />
+                  <Tooltip contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155" }} />
+                  <Line type="monotone" dataKey="predicted_solar" stroke="#facc15" name="Predicted Solar" dot={false} />
+                  <Line type="monotone" dataKey="predicted_load" stroke="#f87171" name="Predicted Load" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p>Forecast chart will appear here (Week 2)</p>
+            )}
           </div>
         </>
       )}
