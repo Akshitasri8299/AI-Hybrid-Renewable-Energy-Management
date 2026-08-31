@@ -25,6 +25,13 @@ function FaultsAlerts() {
       });
   }, []);
 
+  const renderAlert = (alert, index) => (
+    <li key={index} style={{ marginBottom: "10px" }}>
+      <strong>{alert.alert_type}</strong> — {alert.severity} severity
+      {alert.actual_value !== null && alert.actual_value !== undefined && ` (value: ${alert.actual_value})`}
+    </li>
+  );
+
   return (
     <div className="page">
       <h1>Faults / Alerts</h1>
@@ -46,29 +53,21 @@ function FaultsAlerts() {
       {!error && !loading && (
         <>
           <div className="placeholder-box">
-            <h3>🚨 Active Alerts</h3>
+            <h3>🚨 Active Alerts ({activeAlerts.length} total)</h3>
             {activeAlerts.length === 0 ? (
               <p>No active alerts right now</p>
             ) : (
-              <ul>
-                {activeAlerts.map((alert, index) => (
-                  <li key={index}>{alert.message || JSON.stringify(alert)}</li>
-                ))}
-              </ul>
+              <ul>{activeAlerts.slice(0, 5).map(renderAlert)}</ul>
             )}
           </div>
 
           <div className="section-row">
             <div className="placeholder-box">
-              <h3>📋 Alert History</h3>
+              <h3>📋 Alert History ({alertHistory.length} total)</h3>
               {alertHistory.length === 0 ? (
                 <p>No past alerts recorded yet</p>
               ) : (
-                <ul>
-                  {alertHistory.map((alert, index) => (
-                    <li key={index}>{alert.message || JSON.stringify(alert)}</li>
-                  ))}
-                </ul>
+                <ul>{alertHistory.slice(0, 5).map(renderAlert)}</ul>
               )}
             </div>
             <div className="placeholder-box">
