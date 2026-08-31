@@ -517,3 +517,37 @@ def optimized_decision(request):
         'upcoming_forecasts_used': upcoming,
         'decision': decision,
     })    
+
+@api_view(['GET'])
+def test_optimized_decision(request):
+    """
+    Test the forecast-aware optimizer with custom current values
+    AND custom upcoming forecast values, via query params.
+    Example: /api/decision/optimized-test/?solar=60&wind=20&load=40&battery=90
+             &f1_solar=10&f1_wind=15&f1_load=45
+    """
+    solar = float(request.GET.get('solar', 0))
+    wind = float(request.GET.get('wind', 0))
+    load = float(request.GET.get('load', 50))
+    battery = float(request.GET.get('battery', 50))
+
+    # Optional: one upcoming forecast hour, provided via query params
+    upcoming = []
+    if request.GET.get('f1_solar') is not None:
+        upcoming.append({
+            'target_time': 'next_hour',
+            'predicted_solar': float(request.GET.get('f1_solar', 0)),
+            'predicted_wind': float(request.GET.get('f1_wind', 0)),
+            'predicted_load': float(request.GET.get('f1_load', 0)),
+        })
+
+    decision = forecast_optimizer.optimize_decision(
+        solar_kw=solar, wind_kw=wind, load_kw=load, battery_soc_percent=battery,
+        upcoming_forecasts=upcoming,
+    )
+
+    return Response({
+        'inputs': {'solar_kw': solar, 'wind_kw': wind, 'load_kw': load, 'battery_soc_percent': battery},
+        'upcoming_forecasts_used': upcoming,
+        'decision': decision,
+    })    
