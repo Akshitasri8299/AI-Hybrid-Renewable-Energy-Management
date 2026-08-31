@@ -259,33 +259,50 @@ def simulate_scenario(request):
 def analytics_summary(request):
     """
     Computes high-level KPIs from stored generation/load data,
-    for the Analytics page.
+    for the Analytics page. Wastage is computed per-hour (not on
+    totals) so it correctly reflects moments where renewable
+    generation exceeded load even if the 7-day totals don't.
     """
-    generation_records = GenerationData.objects.all()
-    load_records = LoadData.objects.all()
+    generation_records = list(GenerationData.objects.all().order_by('timestamp'))
+    load_by_timestamp = {l.timestamp: l.consumption for l in LoadData.objects.all()}
 
-    total_solar = sum(g.solar_generation for g in generation_records)
-    total_wind = sum(g.wind_generation for g in generation_records)
-    total_renewable = total_solar + total_wind
-    total_load = sum(l.consumption for l in load_records)
+    if not generation_records:
+        return Response({
+            'renewable_utilization_percent': None,
+            'energy_wastage_kwh': None,
+            'cost_savings_inr': None,
+            'co2_savings_kg': None,
+            'assumptions': {},
+        })
 
-    # Renewable utilization: how much of total load was covered by renewables
-    if total_load > 0:
-        renewable_utilization = round(min(total_renewable / total_load, 1) * 100, 1)
-    else:
-        renewable_utilization = None
+    total_renewable = 0
+    total_load = 0
+    total_wastage = 0
+    total_renewable_used = 0
 
-        # Energy wastage: renewable generation that exceeded load (simplified, assumes no storage/export)
-    energy_wastage = round(max(total_renewable - total_load, 0), 1) if generation_records else None
+    for g in generation_records:
+        renewable_at_hour = g.solar_generation + g.wind_generation
+        load_at_hour = load_by_timestamp.get(g.timestamp, 0)
 
-    # Cost savings: renewable kWh used instead of grid, at an assumed grid rate
-    GRID_RATE_PER_KWH = 8  # INR, adjustable assumption
-    renewable_used = min(total_renewable, total_load) if total_load else 0
-    cost_savings = round(renewable_used * GRID_RATE_PER_KWH, 2) if generation_records else None
+        total_renewable += renewable_at_hour
+        total_load += load_at_hour
 
-    # CO2 savings: renewable kWh used * emission factor avoided
-    CO2_FACTOR_KG_PER_KWH = 0.82  # approx grid emission factor
-    co2_savings = round(renewable_used * CO2_FACTOR_KG_PER_KWH, 2) if generation_records else None
+        # Wastage: renewable that exceeded load THIS hour (can't be used or stored beyond capacity)
+        surplus = renewable_at_hour - load_at_hour
+        if surplus > 0:
+            total_wastage += surplus
+            total_renewable_used += load_at_hour
+        else:
+            total_renewable_used += renewable_at_hour
+
+    renewable_utilization = round(min(total_renewable / total_load, 1) * 100, 1) if total_load > 0 else None
+    energy_wastage = round(total_wastage, 1)
+
+    GRID_RATE_PER_KWH = 8
+    CO2_FACTOR_KG_PER_KWH = 0.82
+
+    cost_savings = round(total_renewable_used * GRID_RATE_PER_KWH, 2)
+    co2_savings = round(total_renewable_used * CO2_FACTOR_KG_PER_KWH, 2)
 
     return Response({
         'renewable_utilization_percent': renewable_utilization,
