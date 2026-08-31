@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
+import {
+  BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
 import StatusCard from "../components/StatusCard";
 
 function Analytics() {
   const [data, setData] = useState(null);
   const [baseline, setBaseline] = useState(null);
   const [baselineError, setBaselineError] = useState(null);
+  const [trends, setTrends] = useState(null);
+  const [trendsError, setTrendsError] = useState(null);
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/analytics/summary/")
@@ -30,6 +36,40 @@ function Analytics() {
         console.error("Error connecting to forecast/baseline endpoint:", error);
         setBaselineError("Unable to load baseline comparison data.");
       });
+
+    // Fetch historical generation + load data for the trends chart
+    Promise.all([
+      fetch("http://127.0.0.1:8000/api/generation/").then((r) => r.json()),
+      fetch("http://127.0.0.1:8000/api/load/").then((r) => r.json()),
+    ])
+      .then(([generationData, loadData]) => {
+        console.log("Generation data received:", generationData);
+        console.log("Load data received:", loadData);
+
+        const genList = Array.isArray(generationData) ? generationData : generationData.results || [];
+        const loadList = Array.isArray(loadData) ? loadData : loadData.results || [];
+
+        // Merge generation + load by timestamp
+        const loadByTimestamp = {};
+        loadList.forEach((l) => {
+          loadByTimestamp[l.timestamp] = l.consumption;
+        });
+
+        const merged = genList
+          .map((g) => ({
+            timestamp: g.timestamp,
+            solar: g.solar_generation,
+            wind: g.wind_generation,
+            load: loadByTimestamp[g.timestamp] ?? null,
+          }))
+          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        setTrends(merged);
+      })
+      .catch((error) => {
+        console.error("Error connecting to generation/load endpoints:", error);
+        setTrendsError("Unable to load generation trend data.");
+      });
   }, []);
 
   const showValue = (val) => (val === null || val === undefined ? "--" : val);
@@ -51,6 +91,26 @@ function Analytics() {
       </td>
     </tr>
   );
+
+  const baselineChartData = baseline
+    ? [
+        {
+          metric: "Solar",
+          "Previous-Value MAE": baseline.solar?.previous_value_baseline?.mae,
+          "Historical-Avg MAE": baseline.solar?.historical_average_baseline?.mae,
+        },
+        {
+          metric: "Wind",
+          "Previous-Value MAE": baseline.wind?.previous_value_baseline?.mae,
+          "Historical-Avg MAE": baseline.wind?.historical_average_baseline?.mae,
+        },
+        {
+          metric: "Load",
+          "Previous-Value MAE": baseline.load?.previous_value_baseline?.mae,
+          "Historical-Avg MAE": baseline.load?.historical_average_baseline?.mae,
+        },
+      ]
+    : [];
 
   return (
     <div className="page">
@@ -96,19 +156,44 @@ function Analytics() {
       <div className="section-row">
         <div className="placeholder-box">
           <h3>📊 Generation Trends</h3>
-          <p>
-            {data && data.trends
-              ? JSON.stringify(data.trends)
-              : "Historical solar/wind/load charts will appear here"}
-          </p>
+          {trendsError && <p style={{ color: "#f87171" }}>{trendsError}</p>}
+          {!trendsError && !trends && <p>Loading trend data...</p>}
+          {!trendsError && trends && trends.length === 0 && (
+            <p>No historical generation data available yet</p>
+          )}
+          {!trendsError && trends && trends.length > 0 && (
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={trends}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <XAxis dataKey="timestamp" stroke="#94a3b8" tick={false} />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155" }} />
+                <Legend />
+                <Line type="monotone" dataKey="solar" stroke="#facc15" name="Solar (kW)" dot={false} />
+                <Line type="monotone" dataKey="wind" stroke="#38bdf8" name="Wind (kW)" dot={false} />
+                <Line type="monotone" dataKey="load" stroke="#f87171" name="Load (kW)" dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
+
         <div className="placeholder-box">
           <h3>⚖️ AI vs Conventional</h3>
-          <p>
-            {data && data.comparison
-              ? JSON.stringify(data.comparison)
-              : "Comparison chart will appear here"}
-          </p>
+          {baselineError && <p style={{ color: "#f87171" }}>{baselineError}</p>}
+          {!baselineError && !baseline && <p>Loading comparison data...</p>}
+          {!baselineError && baseline && (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={baselineChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <XAxis dataKey="metric" stroke="#94a3b8" />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155" }} />
+                <Legend />
+                <Bar dataKey="Previous-Value MAE" fill="#38bdf8" />
+                <Bar dataKey="Historical-Avg MAE" fill="#facc15" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
     </div>
