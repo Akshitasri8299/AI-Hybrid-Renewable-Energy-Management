@@ -68,11 +68,63 @@ function Dashboard() {
           <div className="section-row">
             <div className="placeholder-box">
               <h3>Energy Flow Visualization</h3>
-              <p>Diagram will appear here (Week 2)</p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "1.6rem" }}>☀️🌬️</div>
+                  <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "4px 0 0" }}>Generation</p>
+                  <p style={{ fontWeight: 600 }}>
+                    {showValue(
+                      data.solar_generation_kw != null && data.wind_generation_kw != null
+                        ? (data.solar_generation_kw + data.wind_generation_kw).toFixed(1)
+                        : null
+                    )}{" "}
+                    kW
+                  </p>
+                </div>
+
+                <div style={{ fontSize: "1.5rem", color: "#38bdf8" }}>→</div>
+
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "1.6rem" }}>🔋</div>
+                  <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "4px 0 0" }}>Battery</p>
+                  <p style={{ fontWeight: 600 }}>{showValue(data.battery?.soc_percent)} %</p>
+                </div>
+
+                <div style={{ fontSize: "1.5rem", color: "#38bdf8" }}>→</div>
+
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "1.6rem" }}>🔌</div>
+                  <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "4px 0 0" }}>Load</p>
+                  <p style={{ fontWeight: 600 }}>{showValue(data.load_kw)} kW</p>
+                </div>
+
+                <div style={{ fontSize: "1.5rem", color: "#38bdf8" }}>→</div>
+
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "1.6rem" }}>🏭</div>
+                  <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "4px 0 0" }}>Grid</p>
+                  <p style={{ fontWeight: 600, textTransform: "capitalize" }}>
+                    {data.current_decision?.grid_action || "--"}
+                  </p>
+                </div>
+              </div>
             </div>
+
             <div className="placeholder-box">
               <h3>Alerts</h3>
-              <p>No alerts yet</p>
+              {data.active_alerts && data.active_alerts.length > 0 ? (
+                <ul>
+                  {data.active_alerts.map((alert, index) => (
+                    <li key={index} style={{ marginBottom: "6px" }}>
+                      <strong style={{ textTransform: "capitalize" }}>{alert.severity}</strong>
+                      {" — "}
+                      {alert.type}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No alerts yet</p>
+              )}
             </div>
           </div>
 
