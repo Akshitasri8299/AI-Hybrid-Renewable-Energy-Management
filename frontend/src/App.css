@@ -134,6 +134,7 @@ body {
   color: #94a3b8;
   margin-bottom: 0;
 }
+
 /* Scenario buttons (What-if Simulation) */
 .scenario-buttons {
   display: flex;
@@ -161,4 +162,91 @@ body {
   color: #0f172a;
   font-weight: 600;
   border-color: #38bdf8;
+}
+
+/* ===== Mobile Responsiveness ===== */
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .navbar-links {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .navbar-links a {
+    font-size: 0.85rem;
+    padding: 6px 8px;
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .page h1 {
+    font-size: 1.6rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .status-card {
+    flex: 1 1 100%;
+    padding: 12px 14px;
+  }
+
+  .status-card p {
+    font-size: 1.15rem;
+  }
+
+  .section-row {
+    flex-direction: column;
+  }
+
+  .placeholder-box {
+    padding: 14px;
+  }
+
+  .scenario-buttons {
+    flex-direction: column;
+  }
+
+  .scenario-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-title {
+    font-size: 1rem;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page h1 {
+    font-size: 1.4rem;
+  }
+
+  table {
+    font-size: 0.8rem;
+  }
+
+  th, td {
+    padding: 6px !important;
+  }
 }
