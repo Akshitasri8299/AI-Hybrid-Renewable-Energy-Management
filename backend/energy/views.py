@@ -288,7 +288,6 @@ def analytics_summary(request):
         total_renewable += renewable_at_hour
         total_load += load_at_hour
 
-        # Wastage: renewable that exceeded load THIS hour (can't be used or stored beyond capacity)
         surplus = renewable_at_hour - load_at_hour
         if surplus > 0:
             total_wastage += surplus
@@ -407,7 +406,6 @@ def baseline_comparison(request):
         hourly_avg = df.groupby('hour')[col].mean()
         hist_pred = df['hour'].map(hourly_avg).values
 
-        # ML model predictions on the same historical rows
         try:
             ml_preds = []
             for _, row in df.iterrows():
@@ -531,7 +529,6 @@ def test_optimized_decision(request):
     load = float(request.GET.get('load', 50))
     battery = float(request.GET.get('battery', 50))
 
-    # Optional: one upcoming forecast hour, provided via query params
     upcoming = []
     if request.GET.get('f1_solar') is not None:
         upcoming.append({
@@ -551,3 +548,72 @@ def test_optimized_decision(request):
         'upcoming_forecasts_used': upcoming,
         'decision': decision,
     })    
+
+
+@api_view(['GET'])
+def anomaly_detection(request):
+    """
+    Flags records where actual generation/load deviates significantly
+    from the forecast, and where battery health is degrading.
+    """
+    THRESHOLD_PERCENT = 30
+
+    forecasts = Forecast.objects.order_by('-timestamp')[:48]
+    anomalies = []
+
+    for f in forecasts:
+        actual_gen = GenerationData.objects.filter(timestamp=f.timestamp).first()
+        actual_load = LoadData.objects.filter(timestamp=f.timestamp).first()
+
+        def check(name, predicted, actual):
+            if predicted is None or actual is None or predicted == 0:
+                return None
+            deviation_percent = abs(actual - predicted) / abs(predicted) * 100
+            if deviation_percent > THRESHOLD_PERCENT:
+                return {
+                    'timestamp': f.timestamp,
+                    'type': f'{name} deviation from forecast',
+                    'expected_value': round(predicted, 1),
+                    'actual_value': round(actual, 1),
+                    'deviation_percent': round(deviation_percent, 1),
+                    'severity': 'high' if deviation_percent > 60 else 'medium',
+                }
+            return None
+
+        if actual_gen:
+            solar_anomaly = check('Solar generation', f.predicted_solar, actual_gen.solar_generation)
+            if solar_anomaly:
+                anomalies.append(solar_anomaly)
+            wind_anomaly = check('Wind generation', f.predicted_wind, actual_gen.wind_generation)
+            if wind_anomaly:
+                anomalies.append(wind_anomaly)
+
+        if actual_load:
+            load_anomaly = check('Load consumption', f.predicted_load, actual_load.consumption)
+            if load_anomaly:
+                anomalies.append(load_anomaly)
+
+    battery_records = BatteryData.objects.order_by('-timestamp')[:48]
+    health_values = [b.health_indicator for b in battery_records if b.health_indicator is not None]
+    battery_anomalies = []
+    if len(health_values) >= 2:
+        latest_health = health_values[0]
+        oldest_health = health_values[-1]
+        if oldest_health - latest_health > 2:
+            battery_anomalies.append({
+                'timestamp': battery_records[0].timestamp,
+                'type': 'Battery health degradation',
+                'expected_value': round(oldest_health, 1),
+                'actual_value': round(latest_health, 1),
+                'deviation_percent': round(oldest_health - latest_health, 1),
+                'severity': 'medium',
+            })
+
+    anomalies = sorted(anomalies, key=lambda a: a['timestamp'], reverse=True)
+
+    return Response({
+        'generation_load_anomalies': anomalies[:20],
+        'battery_anomalies': battery_anomalies,
+        'total_anomalies': len(anomalies) + len(battery_anomalies),
+        'threshold_percent': THRESHOLD_PERCENT,
+    })
