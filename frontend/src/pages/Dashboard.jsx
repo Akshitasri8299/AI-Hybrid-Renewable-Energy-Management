@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import StatusCard from "../components/StatusCard";
+import DigitalTwin from "../components/DigitalTwin";
 
 function Dashboard() {
   const [data, setData] = useState(null);
@@ -65,51 +66,19 @@ function Dashboard() {
             <StatusCard title="Grid Status" value={data.current_decision?.grid_action || "--"} unit="" icon="🏭" />
           </div>
 
+          <div className="placeholder-box">
+            <h3>Energy Flow Visualization (Digital Twin)</h3>
+            <DigitalTwin
+              solar={data.solar_generation_kw}
+              wind={data.wind_generation_kw}
+              load={data.load_kw}
+              batterySoc={data.battery?.soc_percent}
+              batteryAction={data.current_decision?.battery_action}
+              gridAction={data.current_decision?.grid_action}
+            />
+          </div>
+
           <div className="section-row">
-            <div className="placeholder-box">
-              <h3>Energy Flow Visualization</h3>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "1.6rem" }}>☀️🌬️</div>
-                  <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "4px 0 0" }}>Generation</p>
-                  <p style={{ fontWeight: 600 }}>
-                    {showValue(
-                      data.solar_generation_kw != null && data.wind_generation_kw != null
-                        ? (data.solar_generation_kw + data.wind_generation_kw).toFixed(1)
-                        : null
-                    )}{" "}
-                    kW
-                  </p>
-                </div>
-
-                <div style={{ fontSize: "1.5rem", color: "#38bdf8" }}>→</div>
-
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "1.6rem" }}>🔋</div>
-                  <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "4px 0 0" }}>Battery</p>
-                  <p style={{ fontWeight: 600 }}>{showValue(data.battery?.soc_percent)} %</p>
-                </div>
-
-                <div style={{ fontSize: "1.5rem", color: "#38bdf8" }}>→</div>
-
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "1.6rem" }}>🔌</div>
-                  <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "4px 0 0" }}>Load</p>
-                  <p style={{ fontWeight: 600 }}>{showValue(data.load_kw)} kW</p>
-                </div>
-
-                <div style={{ fontSize: "1.5rem", color: "#38bdf8" }}>→</div>
-
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "1.6rem" }}>🏭</div>
-                  <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "4px 0 0" }}>Grid</p>
-                  <p style={{ fontWeight: 600, textTransform: "capitalize" }}>
-                    {data.current_decision?.grid_action || "--"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <div className="placeholder-box">
               <h3>Alerts</h3>
               {data.active_alerts && data.active_alerts.length > 0 ? (
@@ -126,23 +95,23 @@ function Dashboard() {
                 <p>No alerts yet</p>
               )}
             </div>
-          </div>
 
-          <div className="placeholder-box">
-            <h3>Forecast Preview</h3>
-            {forecastPreview && forecastPreview.length > 0 ? (
-              <ResponsiveContainer width="100%" height={160}>
-                <LineChart data={forecastPreview}>
-                  <XAxis dataKey="timestamp" tick={false} stroke="#94a3b8" />
-                  <YAxis stroke="#94a3b8" />
-                  <Tooltip contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155" }} />
-                  <Line type="monotone" dataKey="predicted_solar" stroke="#facc15" name="Predicted Solar" dot={false} />
-                  <Line type="monotone" dataKey="predicted_load" stroke="#f87171" name="Predicted Load" dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <p>Forecast chart will appear here (Week 2)</p>
-            )}
+            <div className="placeholder-box">
+              <h3>Forecast Preview</h3>
+              {forecastPreview && forecastPreview.length > 0 ? (
+                <ResponsiveContainer width="100%" height={160}>
+                  <LineChart data={forecastPreview}>
+                    <XAxis dataKey="timestamp" tick={false} stroke="#94a3b8" />
+                    <YAxis stroke="#94a3b8" />
+                    <Tooltip contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #334155" }} />
+                    <Line type="monotone" dataKey="predicted_solar" stroke="#facc15" name="Predicted Solar" dot={false} />
+                    <Line type="monotone" dataKey="predicted_load" stroke="#f87171" name="Predicted Load" dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p>Forecast chart will appear here (Week 2)</p>
+              )}
+            </div>
           </div>
         </>
       )}
