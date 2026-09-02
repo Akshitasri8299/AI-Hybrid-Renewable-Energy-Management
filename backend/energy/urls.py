@@ -5,7 +5,7 @@ from .views import (
     BatteryDataViewSet, ForecastViewSet, EnergyDecisionViewSet,
     AlertViewSet, SimulationScenarioViewSet, alerts_summary, analytics_summary, live_status,
     forecast_summary, energy_management_summary, simulate_scenario, ai_forecast, baseline_comparison,
-    live_decision, test_decision, optimized_decision, test_optimized_decision, anomaly_detection
+    live_decision, test_decision, optimized_decision, test_optimized_decision, anomaly_detection, detect_anomalies
 )
 
 router = DefaultRouter()
@@ -32,4 +32,5 @@ urlpatterns = [
     path('decision/test/', test_decision),
     path('decision/optimized/', optimized_decision),
     path('decision/optimized-test/', test_optimized_decision),
+    path('anomalies/detect/', detect_anomalies),
 ] + router.urls
