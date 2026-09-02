@@ -572,10 +572,10 @@ def anomaly_detection(request):
     and battery health degrading noticeably.
     """
     anomalies = []
-    SOLAR_THRESHOLD = 15   # kW deviation considered anomalous
-    WIND_THRESHOLD = 10
+    SOLAR_THRESHOLD = 3    # kW deviation considered anomalous
+    WIND_THRESHOLD = 2
 
-    recent_forecasts = Forecast.objects.order_by('-timestamp')[:24]
+    recent_forecasts = Forecast.objects.order_by('-timestamp')[:100]
 
     for f in recent_forecasts:
         actual_gen = GenerationData.objects.filter(timestamp=f.target_time).first()
@@ -609,7 +609,7 @@ def anomaly_detection(request):
         latest = recent_battery[0]
         oldest = recent_battery[-1]
         health_drop = oldest.health_indicator - latest.health_indicator
-        if health_drop > 3:
+        if health_drop > 1:
             anomalies.append({
                 'type': 'Battery health degradation',
                 'timestamp': latest.timestamp,
@@ -624,6 +624,7 @@ def anomaly_detection(request):
         'anomalies': anomalies[:20],
         'count': len(anomalies),
     })
+
 
 @api_view(['GET'])
 def detect_anomalies(request):
@@ -665,4 +666,4 @@ def detect_anomalies(request):
     return Response({
         'anomalies_found': len(anomalies),
         'anomalies': anomalies,
-    })    
+    })

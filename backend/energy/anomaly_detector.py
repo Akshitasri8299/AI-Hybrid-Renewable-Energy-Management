@@ -5,9 +5,8 @@ Detects abnormal generation by comparing what was forecasted
 (expected) against what actually happened, rather than using a
 fixed threshold.
 """
-
-DEVIATION_MEDIUM = 30.0
-DEVIATION_HIGH = 50.0
+DEVIATION_MEDIUM = 8.0
+DEVIATION_HIGH = 15.0
 
 
 def check_generation_anomaly(source_name, expected_value, actual_value, min_expected_for_check=5.0):
@@ -49,10 +48,10 @@ def check_battery_health_trend(health_readings):
 
     decline = first_half_avg - second_half_avg
 
-    if decline < 1.0:
+    if decline < 0.3:
         return None
 
-    severity = 'high' if decline >= 3.0 else 'medium'
+    severity = 'high' if decline >= 0.8 else 'medium'
 
     return {
         'alert_type': 'Battery Health Degradation Trend',

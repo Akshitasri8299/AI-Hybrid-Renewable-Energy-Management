@@ -27,17 +27,17 @@ function FaultsAlerts() {
         setLoading(false);
       });
 
-    fetch("http://127.0.0.1:8000/api/analytics/anomalies/")
+    fetch("http://127.0.0.1:8000/api/anomalies/detect/")
       .then((response) => {
         if (!response.ok) throw new Error("Server error");
         return response.json();
       })
       .then((result) => {
         console.log("Anomaly data received:", result);
-        setAnomalies(result);
+        setAnomalies(result.anomalies || []);
       })
       .catch((error) => {
-        console.error("Error connecting to analytics/anomalies endpoint:", error);
+        console.error("Error connecting to anomalies/detect endpoint:", error);
         setAnomalyError("Unable to load anomaly detection data.");
       });
   }, []);
@@ -116,25 +116,22 @@ function FaultsAlerts() {
               <h3>⚠️ Anomaly Detection</h3>
               {anomalyError && <p style={{ color: "#f87171" }}>{anomalyError}</p>}
               {!anomalyError && !anomalies && <p>Loading anomaly data...</p>}
-              {!anomalyError && anomalies && (!anomalies.anomalies || anomalies.anomalies.length === 0) && (
+              {!anomalyError && anomalies && anomalies.length === 0 && (
                 <p>No anomalies detected — generation and load are tracking close to forecast.</p>
               )}
-              {!anomalyError && anomalies && anomalies.anomalies && anomalies.anomalies.length > 0 && (
+              {!anomalyError && anomalies && anomalies.length > 0 && (
                 <div>
                   <p style={{ color: "#94a3b8", marginBottom: "10px" }}>
-                    {anomalies.count} anomalies found
+                    {anomalies.length} anomalies found
                   </p>
                   <ul style={{ maxHeight: "220px", overflowY: "auto", paddingRight: "8px" }}>
-                    {anomalies.anomalies.map((a, index) => (
-                      <li key={index} style={{ marginBottom: "8px" }}>
-                        {a.severity && (
-                          <strong style={{ textTransform: "capitalize" }}>{a.severity}</strong>
-                        )}
-                        {a.severity && " — "}
-                        {a.type || a.message || JSON.stringify(a)}
-                        {a.expected_value !== undefined && a.actual_value !== undefined && (
-                          <> (expected {a.expected_value}, actual {a.actual_value})</>
-                        )}
+                    {anomalies.map((a, index) => (
+                      <li key={index} style={{ marginBottom: "10px" }}>
+                        <strong style={{ textTransform: "capitalize" }}>{a.severity}</strong>
+                        {" — "}
+                        {a.alert_type}
+                        <br />
+                        <span style={{ color: "#94a3b8" }}>{a.reason}</span>
                       </li>
                     ))}
                   </ul>
