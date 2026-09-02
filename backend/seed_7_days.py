@@ -82,13 +82,14 @@ for i in range(hours):
         health_indicator=round(96 + random.uniform(-1, 1), 1),
     )
 
-    # --- Forecast (naive: predicted = actual + small noise, for demo purposes) ---
+    # --- Forecast (predicted values have larger noise so some hours
+    #     deviate enough from actual to trigger anomaly detection) ---
     Forecast.objects.create(
         timestamp=ts,
         target_time=ts,
-        predicted_solar=round(solar + random.uniform(-4, 4), 1),
-        predicted_wind=round(wind + random.uniform(-3, 3), 1),
-        predicted_load=round(load + random.uniform(-3, 3), 1),
+        predicted_solar=round(max(0, solar + random.uniform(-25, 25)), 1),
+        predicted_wind=round(max(0, wind + random.uniform(-15, 15)), 1),
+        predicted_load=round(max(0, load + random.uniform(-20, 20)), 1),
     )
 
     # --- Energy decision (simple rule matching net balance) ---

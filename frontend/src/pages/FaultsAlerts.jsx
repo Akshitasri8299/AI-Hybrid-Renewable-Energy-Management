@@ -67,7 +67,7 @@ function FaultsAlerts() {
             {activeAlerts.length === 0 ? (
               <p>No active alerts right now</p>
             ) : (
-              <ul>
+              <ul style={{ maxHeight: "280px", overflowY: "auto", paddingRight: "8px" }}>
                 {activeAlerts.map((alert, index) => (
                   <li key={index} style={{ marginBottom: "6px" }}>
                     <strong style={{ textTransform: "capitalize" }}>{alert.severity}</strong>
@@ -90,21 +90,26 @@ function FaultsAlerts() {
               {alertHistory.length === 0 ? (
                 <p>No past alerts recorded yet</p>
               ) : (
-                <ul style={{ maxHeight: "280px", overflowY: "auto", paddingRight: "8px" }}>
-                  {alertHistory.map((alert, index) => (
-                    <li key={index} style={{ marginBottom: "6px" }}>
-                      <strong style={{ textTransform: "capitalize" }}>{alert.severity}</strong>
-                      {" — "}
-                      {alert.alert_type}
-                      {" (expected "}
-                      {alert.expected_value}
-                      {", actual "}
-                      {alert.actual_value}
-                      {") — "}
-                      <span style={{ color: "#4ade80", textTransform: "capitalize" }}>{alert.status}</span>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <p style={{ color: "#94a3b8", marginBottom: "10px" }}>
+                    {alertHistory.length} past alerts
+                  </p>
+                  <ul style={{ maxHeight: "200px", overflowY: "auto", paddingRight: "8px" }}>
+                    {alertHistory.map((alert, index) => (
+                      <li key={index} style={{ marginBottom: "6px" }}>
+                        <strong style={{ textTransform: "capitalize" }}>{alert.severity}</strong>
+                        {" — "}
+                        {alert.alert_type}
+                        {" (expected "}
+                        {alert.expected_value}
+                        {", actual "}
+                        {alert.actual_value}
+                        {") — "}
+                        <span style={{ color: "#4ade80", textTransform: "capitalize" }}>{alert.status}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
               )}
             </div>
             <div className="placeholder-box">
