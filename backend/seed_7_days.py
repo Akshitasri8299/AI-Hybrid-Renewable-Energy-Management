@@ -18,7 +18,7 @@ EnergyDecision.objects.all().delete()
 now = timezone.now().replace(minute=0, second=0, microsecond=0)
 start = now - timedelta(days=7)
 
-soc = 60.0  # starting battery state of charge
+soc = 25.0  # starting battery state of charge (lowered so some hours dip below the low-battery threshold)
 
 hours = 7 * 24
 for i in range(hours):
