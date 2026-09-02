@@ -90,9 +90,19 @@ function FaultsAlerts() {
               {alertHistory.length === 0 ? (
                 <p>No past alerts recorded yet</p>
               ) : (
-                <ul>
+                <ul style={{ maxHeight: "280px", overflowY: "auto", paddingRight: "8px" }}>
                   {alertHistory.map((alert, index) => (
-                    <li key={index}>{alert.message || JSON.stringify(alert)}</li>
+                    <li key={index} style={{ marginBottom: "6px" }}>
+                      <strong style={{ textTransform: "capitalize" }}>{alert.severity}</strong>
+                      {" — "}
+                      {alert.alert_type}
+                      {" (expected "}
+                      {alert.expected_value}
+                      {", actual "}
+                      {alert.actual_value}
+                      {") — "}
+                      <span style={{ color: "#4ade80", textTransform: "capitalize" }}>{alert.status}</span>
+                    </li>
                   ))}
                 </ul>
               )}
