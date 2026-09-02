@@ -1,3 +1,4 @@
+from . import anomaly_detector
 from . import forecast_optimizer
 from . import decision_engine
 from . import ml_predict
@@ -623,3 +624,45 @@ def anomaly_detection(request):
         'anomalies': anomalies[:20],
         'count': len(anomalies),
     })
+
+@api_view(['GET'])
+def detect_anomalies(request):
+    """
+    Scans recent forecast-vs-actual data and battery health trends
+    to detect anomalies (Week 9: Fault Detection).
+    """
+    anomalies = []
+
+    # Check the most recent 10 forecasts against actual generation
+    recent_forecasts = Forecast.objects.order_by('-target_time')[:10]
+
+    for f in recent_forecasts:
+        actual_gen = GenerationData.objects.filter(timestamp=f.target_time).first()
+        if not actual_gen:
+            continue
+
+        solar_anomaly = anomaly_detector.check_generation_anomaly(
+            'Solar', f.predicted_solar, actual_gen.solar_generation
+        )
+        if solar_anomaly:
+            solar_anomaly['timestamp'] = f.target_time
+            anomalies.append(solar_anomaly)
+
+        wind_anomaly = anomaly_detector.check_generation_anomaly(
+            'Wind', f.predicted_wind, actual_gen.wind_generation
+        )
+        if wind_anomaly:
+            wind_anomaly['timestamp'] = f.target_time
+            anomalies.append(wind_anomaly)
+
+    # Check battery health trend over the last 20 readings
+    recent_battery = list(BatteryData.objects.order_by('timestamp')[:20].values_list('health_indicator', flat=True))
+    health_anomaly = anomaly_detector.check_battery_health_trend(recent_battery)
+    if health_anomaly:
+        health_anomaly['timestamp'] = None
+        anomalies.append(health_anomaly)
+
+    return Response({
+        'anomalies_found': len(anomalies),
+        'anomalies': anomalies,
+    })    
