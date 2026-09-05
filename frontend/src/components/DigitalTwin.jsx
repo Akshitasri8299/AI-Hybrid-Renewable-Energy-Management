@@ -30,7 +30,7 @@ function DigitalTwin({ solar, wind, load, batterySoc, batteryAction, gridAction 
         }
       `}</style>
 
-      <svg viewBox="0 0 760 260" width="100%" height="auto" style={{ maxHeight: "260px" }}>
+      <svg viewBox="0 0 760 260" width="100%" style={{ maxHeight: "260px", height: "auto" }}>
         {/* ---- Connecting lines ---- */}
         {/* Solar -> Battery */}
         <line x1="150" y1="70" x2="330" y2="145" stroke="#facc15"
@@ -90,7 +90,7 @@ function DigitalTwin({ solar, wind, load, batterySoc, batteryAction, gridAction 
           <text x="25" y="112" textAnchor="middle" fill="#4ade80" fontSize="13" fontWeight="700">
             {fmt(soc)}%
           </text>
-          <text x="25" y="126" textAnchor="middle" fill="#64748b" fontSize="9" textTransform="capitalize">
+          <text x="25" y="126" textAnchor="middle" fill="#64748b" fontSize="9" style={{ textTransform: "capitalize" }}>
             {batteryAction || "idle"}
           </text>
         </g>
@@ -112,7 +112,7 @@ function DigitalTwin({ solar, wind, load, batterySoc, batteryAction, gridAction 
           <line x1="6" y1="15" x2="24" y2="15" stroke="#a78bfa" strokeWidth="2" />
           <line x1="3" y1="28" x2="27" y2="28" stroke="#a78bfa" strokeWidth="2" />
           <text x="15" y="62" textAnchor="middle" fill="#94a3b8" fontSize="11">Grid</text>
-          <text x="15" y="78" textAnchor="middle" fill="#a78bfa" fontSize="12" fontWeight="700" textTransform="capitalize">
+          <text x="15" y="78" textAnchor="middle" fill="#a78bfa" fontSize="12" fontWeight="700" style={{ textTransform: "capitalize" }}>
             {gridAction || "--"}
           </text>
         </g>
