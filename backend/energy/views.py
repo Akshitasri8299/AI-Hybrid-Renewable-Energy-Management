@@ -1,3 +1,4 @@
+from . import ai_vs_conventional
 from . import anomaly_detector
 from . import forecast_optimizer
 from . import decision_engine
@@ -714,3 +715,30 @@ def logout(request):
     except Token.DoesNotExist:
         pass
     return Response({'success': True})
+
+@api_view(['GET'])
+def ai_vs_conventional_comparison(request):
+    """
+    Compares the AI-optimized system against a conventional
+    (no battery management) approach, using all available
+    historical data, to quantify real-world savings.
+    """
+    generation_records = GenerationData.objects.all().order_by('timestamp')
+    load_by_timestamp = {l.timestamp: l.consumption for l in LoadData.objects.all()}
+
+    hourly_records = []
+    for g in generation_records:
+        load = load_by_timestamp.get(g.timestamp)
+        if load is not None:
+            hourly_records.append({
+                'solar_kw': g.solar_generation,
+                'wind_kw': g.wind_generation,
+                'load_kw': load,
+            })
+
+    if not hourly_records:
+        return Response({'error': 'No data available for comparison.'}, status=400)
+
+    result = ai_vs_conventional.compare(hourly_records)
+
+    return Response(result)    
