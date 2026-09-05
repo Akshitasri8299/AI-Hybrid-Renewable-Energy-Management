@@ -199,13 +199,6 @@ function Login() {
               <span style={{ color: "#64748b", fontWeight: 400 }}>admin / admin123</span>
             </button>
             <button
-              onClick={() => fillCredentials("operator", "operator123")}
-              style={roleBadgeStyle("rgba(74, 222, 128, 0.15)", "#4ade80")}
-            >
-              <span style={{ color: "#4ade80" }}>Operator</span>
-              <span style={{ color: "#64748b", fontWeight: 400 }}>operator / operator123</span>
-            </button>
-            <button
               onClick={() => fillCredentials("viewer", "viewer123")}
               style={roleBadgeStyle("rgba(251, 191, 36, 0.15)", "#fbbf24")}
             >
