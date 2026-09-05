@@ -41,17 +41,23 @@ function Navbar() {
 
   return (
     <>
-      <button
-        className="sidebar-toggle"
-        type="button"
-        aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+      <header className="mobile-header">
+        <button
+          className="sidebar-toggle"
+          type="button"
+          aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen((open) => !open)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        <div className="mobile-brand">
+          <span className="mobile-brand-mark" aria-hidden="true">⚡</span>
+          <span>Hybrid Energy Manager</span>
+        </div>
+      </header>
 
       <div
         className={`sidebar-backdrop${isOpen ? " visible" : ""}`}
