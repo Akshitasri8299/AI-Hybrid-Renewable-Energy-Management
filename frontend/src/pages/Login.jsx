@@ -12,9 +12,8 @@ function Login() {
 
   const validate = () => {
     const errs = {};
-    if (!username.trim()) errs.username = "Email or username is required";
+    if (!username.trim()) errs.username = "Username is required";
     if (!password) errs.password = "Password is required";
-    else if (password.length < 1) errs.password = "Password is required";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -27,13 +26,20 @@ function Login() {
 
     setSubmitting(true);
     try {
-      await login(username.trim(), password);
+      const data = await login(username.trim(), password);
       navigate("/");
     } catch (err) {
       setServerError(err.message || "Login failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const fillCredentials = (user, pass) => {
+    setUsername(user);
+    setPassword(pass);
+    setErrors({});
+    setServerError(null);
   };
 
   const fieldStyle = {
@@ -55,6 +61,20 @@ function Login() {
     fontSize: "0.85rem",
     fontWeight: 500,
   };
+
+  const roleBadgeStyle = (bg, border) => ({
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    backgroundColor: bg,
+    border: `1px solid ${border}`,
+    borderRadius: "6px",
+    padding: "6px 14px",
+    fontSize: "0.8rem",
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "opacity 0.2s",
+  });
 
   return (
     <div
@@ -111,12 +131,12 @@ function Login() {
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: "18px" }}>
-            <label style={labelStyle}>Email or Username</label>
+            <label style={labelStyle}>Username</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your email or username"
+              placeholder="Enter your username"
               style={fieldStyle}
               disabled={submitting}
               autoComplete="username"
@@ -165,6 +185,35 @@ function Login() {
             {submitting ? "Signing in..." : "Sign In"}
           </button>
         </form>
+
+        <div style={{ marginTop: "28px", paddingTop: "20px", borderTop: "1px solid #334155" }}>
+          <p style={{ color: "#64748b", fontSize: "0.8rem", textAlign: "center", marginBottom: "12px" }}>
+            Test accounts (click to fill):
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: "8px", flexWrap: "wrap" }}>
+            <button
+              onClick={() => fillCredentials("admin", "admin123")}
+              style={roleBadgeStyle("rgba(56, 189, 248, 0.15)", "#38bdf8")}
+            >
+              <span style={{ color: "#38bdf8" }}>Admin</span>
+              <span style={{ color: "#64748b", fontWeight: 400 }}>admin / admin123</span>
+            </button>
+            <button
+              onClick={() => fillCredentials("operator", "operator123")}
+              style={roleBadgeStyle("rgba(74, 222, 128, 0.15)", "#4ade80")}
+            >
+              <span style={{ color: "#4ade80" }}>Operator</span>
+              <span style={{ color: "#64748b", fontWeight: 400 }}>operator / operator123</span>
+            </button>
+            <button
+              onClick={() => fillCredentials("viewer", "viewer123")}
+              style={roleBadgeStyle("rgba(251, 191, 36, 0.15)", "#fbbf24")}
+            >
+              <span style={{ color: "#fbbf24" }}>Viewer</span>
+              <span style={{ color: "#64748b", fontWeight: 400 }}>viewer / viewer123</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

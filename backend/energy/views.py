@@ -704,3 +704,13 @@ def login(request):
             'role': role,
         },
     })
+
+
+@api_view(['POST'])
+def logout(request):
+    try:
+        token = Token.objects.get(user=request.user)
+        token.delete()
+    except Token.DoesNotExist:
+        pass
+    return Response({'success': True})

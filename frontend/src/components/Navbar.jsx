@@ -2,19 +2,34 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getUser, logout } from "../api";
 
+const ALL_LINKS = [
+  { path: "/", label: "Dashboard", roles: ["admin", "staff", "user"] },
+  { path: "/forecast", label: "Forecast", roles: ["admin", "staff", "user"] },
+  { path: "/energy-management", label: "Energy Management", roles: ["admin", "staff"] },
+  { path: "/faults-alerts", label: "Faults/Alerts", roles: ["admin", "staff"] },
+  { path: "/what-if-simulation", label: "What-if Simulation", roles: ["admin", "staff"] },
+  { path: "/analytics", label: "Analytics", roles: ["admin", "staff", "user"] },
+];
+
+const ROLE_LABELS = {
+  admin: "Admin",
+  staff: "Operator",
+  user: "Viewer",
+};
+
+const ROLE_COLORS = {
+  admin: "#38bdf8",
+  staff: "#4ade80",
+  user: "#fbbf24",
+};
+
 function Navbar() {
   const navigate = useNavigate();
   const user = getUser();
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const links = [
-    { path: "/", label: "Dashboard" },
-    { path: "/forecast", label: "Forecast" },
-    { path: "/energy-management", label: "Energy Management" },
-    { path: "/faults-alerts", label: "Faults/Alerts" },
-    { path: "/what-if-simulation", label: "What-if Simulation" },
-    { path: "/analytics", label: "Analytics" },
-  ];
+  const role = user?.role || "user";
+  const links = ALL_LINKS.filter((link) => link.roles.includes(role));
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -40,14 +55,16 @@ function Navbar() {
         {user && (
           <span
             style={{
-              color: "#38bdf8",
+              color: ROLE_COLORS[role] || "#38bdf8",
               fontSize: "0.85rem",
               fontWeight: 600,
-              textTransform: "capitalize",
               padding: "6px 10px",
+              border: `1px solid ${ROLE_COLORS[role] || "#38bdf8"}`,
+              borderRadius: "6px",
+              opacity: 0.9,
             }}
           >
-            {user.role}
+            {ROLE_LABELS[role] || role}
           </span>
         )}
         <button
