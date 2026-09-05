@@ -3,24 +3,22 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { getUser, logout } from "../api";
 
 const ALL_LINKS = [
-  { path: "/", label: "Dashboard", roles: ["admin", "staff", "user"] },
-  { path: "/forecast", label: "Forecast", roles: ["admin", "staff", "user"] },
-  { path: "/energy-management", label: "Energy Management", roles: ["admin", "staff"] },
-  { path: "/faults-alerts", label: "Faults/Alerts", roles: ["admin", "staff"] },
-  { path: "/what-if-simulation", label: "What-if Simulation", roles: ["admin", "staff"] },
-  { path: "/analytics", label: "Analytics", roles: ["admin", "staff", "user"] },
+  { path: "/", label: "Dashboard", roles: ["admin", "viewer"] },
+  { path: "/forecast", label: "Forecast", roles: ["admin", "viewer"] },
+  { path: "/energy-management", label: "Energy Management", roles: ["admin"] },
+  { path: "/faults-alerts", label: "Faults/Alerts", roles: ["admin"] },
+  { path: "/what-if-simulation", label: "What-if Simulation", roles: ["admin"] },
+  { path: "/analytics", label: "Analytics", roles: ["admin", "viewer"] },
 ];
 
 const ROLE_LABELS = {
   admin: "Admin",
-  staff: "Operator",
-  user: "Viewer",
+  viewer: "Viewer",
 };
 
 const ROLE_COLORS = {
   admin: "#38bdf8",
-  staff: "#4ade80",
-  user: "#fbbf24",
+  viewer: "#fbbf24",
 };
 
 function Navbar() {
@@ -29,7 +27,8 @@ function Navbar() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const role = user?.role || "user";
+  // Only two effective roles: anyone who isn't admin is treated as a Viewer
+  const role = user?.role === "admin" ? "admin" : "viewer";
   const links = ALL_LINKS.filter((link) => link.roles.includes(role));
 
   const handleLogout = async () => {
