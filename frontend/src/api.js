@@ -42,14 +42,6 @@ async function apiRequest(endpoint, options = {}) {
     headers,
   });
 
-  if (response.status === 401) {
-    clearAuth();
-    if (window.location.pathname !== "/login") {
-      window.location.href = "/login";
-    }
-    throw new Error("Session expired. Please log in again.");
-  }
-
   return response;
 }
 

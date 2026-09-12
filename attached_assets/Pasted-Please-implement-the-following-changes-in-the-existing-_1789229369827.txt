@@ -1,0 +1,101 @@
+Please implement the following changes in the existing project.
+
+### 1. Remove Login Requirement
+
+Remove the login requirement from the application.
+
+* The application should open directly without requiring the user to log in.
+* Remove/disable any authentication check, route protection, redirect, or conditional logic that forces users to the login page.
+* Do NOT delete the existing Navbar, Login component, or authentication files unless they are completely unnecessary.
+* Preserve the existing UI and functionality.
+* Make sure all existing pages/routes remain accessible without login.
+* Check `App.jsx` and related routing/authentication files and remove only the login enforcement logic.
+
+### 2. Add LLM-Powered AI Insights Assistant
+
+Add a new AI feature called **AI Insights Assistant**.
+
+Important: The existing Random Forest model is used for forecasting. Do NOT replace or modify the Random Forest model. This is a separate LLM-based feature for generating natural-language insights.
+
+#### Backend
+
+Create a new endpoint:
+
+`GET /api/ai/insight/`
+
+The endpoint should:
+
+1. Get the current `live_status` data from the existing system.
+2. Extract:
+
+   * Solar generation
+   * Wind generation
+   * Current load
+   * Battery percentage
+   * Current energy-management decision
+   * Upcoming forecast summary
+3. Send this information to an LLM API.
+4. Generate a short, friendly, actionable insight.
+5. Return JSON in this format:
+
+```json
+{
+  "insight": "Right now, solar and wind are covering most of the load, while the battery is charging safely. Since cloudy weather is expected, consider reducing non-essential loads over the next few hours."
+}
+```
+
+#### LLM Prompt
+
+Use this prompt structure:
+
+```text
+You are an energy management assistant.
+
+Given the following live energy system data:
+
+Solar: {solar} kW
+Wind: {wind} kW
+Load: {load} kW
+Battery: {battery}%
+Current decision: {decision}
+Upcoming forecast: {forecast_summary}
+
+Write a short 2-3 sentence, friendly, actionable insight for the system operator.
+
+Do not invent or assume data that is not provided.
+```
+
+#### API Key Security
+
+* Use an LLM provider such as OpenAI GPT or Google Gemini.
+* Store the API key only in the backend `.env` file.
+* Never expose the API key in frontend code.
+* Never hardcode the API key.
+* Make sure `.env` is included in `.gitignore`.
+* Use environment variables in the backend.
+
+### 3. Frontend AI Feature
+
+Add an **"Ask AI"** button on the Dashboard/Energy Management page.
+
+When the user clicks it:
+
+1. Call `GET /api/ai/insight/`.
+2. Show a loading spinner while waiting.
+3. Display the returned insight inside a clean AI Insight card.
+4. Handle API errors gracefully with a user-friendly error message.
+5. Match the existing application's UI/UX and styling.
+
+### Important
+
+Before making changes, inspect the existing project structure and reuse the current backend APIs/data models wherever possible.
+
+Do not break the existing Random Forest forecasting functionality, energy-management logic, dashboard, or other existing features.
+
+After implementation:
+
+* Test the backend endpoint.
+* Test the frontend integration.
+* Fix any errors.
+* Clearly tell me which files were modified and what was implemented.
+* Do not make unnecessary changes to unrelated files.

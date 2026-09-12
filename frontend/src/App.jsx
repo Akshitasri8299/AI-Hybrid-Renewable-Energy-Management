@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Forecast from "./pages/Forecast";
@@ -7,16 +7,7 @@ import FaultsAlerts from "./pages/FaultsAlerts";
 import WhatIfSimulation from "./pages/WhatIfSimulation";
 import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
-import { isAuthenticated } from "./api";
 import "./App.css";
-
-function ProtectedRoute({ children }) {
-  const location = useLocation();
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-  return children;
-}
 
 function App() {
   return (
@@ -26,7 +17,7 @@ function App() {
         <Route
           path="/*"
           element={
-            <ProtectedRoute>
+            <>
               <Navbar />
               <main className="content">
                 <Routes>
@@ -38,7 +29,7 @@ function App() {
                   <Route path="/analytics" element={<Analytics />} />
                 </Routes>
               </main>
-            </ProtectedRoute>
+            </>
           }
         />
       </Routes>

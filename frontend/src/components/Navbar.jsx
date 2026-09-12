@@ -29,13 +29,15 @@ function Navbar() {
 
   // Only two effective roles: anyone who isn't admin is treated as a Viewer
   const role = user?.role === "admin" ? "admin" : "viewer";
-  const links = ALL_LINKS.filter((link) => link.roles.includes(role));
+  // Authentication is optional for this dashboard. Keep all routes visible so
+  // every existing page remains reachable when no user is stored locally.
+  const links = ALL_LINKS;
 
   const handleLogout = async () => {
     setLoggingOut(true);
     await logout();
     setLoggingOut(false);
-    navigate("/login");
+    navigate("/");
   };
 
   return (

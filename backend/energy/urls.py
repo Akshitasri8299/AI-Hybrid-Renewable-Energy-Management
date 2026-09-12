@@ -6,7 +6,7 @@ from .views import (
     AlertViewSet, SimulationScenarioViewSet, alerts_summary, analytics_summary, live_status,
     forecast_summary, energy_management_summary, simulate_scenario, ai_forecast, baseline_comparison,
     live_decision, test_decision, optimized_decision, test_optimized_decision, anomaly_detection, detect_anomalies,
-    login, logout, ai_vs_conventional_comparison
+    login, logout, ai_insight, ai_vs_conventional_comparison
 )
 
 router = DefaultRouter()
@@ -35,6 +35,7 @@ urlpatterns = [
     path('decision/test/', test_decision),
     path('decision/optimized/', optimized_decision),
     path('decision/optimized-test/', test_optimized_decision),
+    path('ai/insight/', ai_insight),
     path('anomalies/detect/', detect_anomalies),
     path('analytics/ai-vs-conventional/', ai_vs_conventional_comparison),
 ] + router.urls

@@ -3,6 +3,12 @@ from . import anomaly_detector
 from . import forecast_optimizer
 from . import decision_engine
 from . import ml_predict
+import json
+import logging
+import os
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+from decouple import config
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -18,6 +24,8 @@ from .serializers import (
     BatteryDataSerializer, ForecastSerializer, EnergyDecisionSerializer,
     AlertSerializer, SimulationScenarioSerializer
 )
+
+logger = logging.getLogger(__name__)
 
 
 class WeatherDataViewSet(viewsets.ModelViewSet):
@@ -60,12 +68,8 @@ class SimulationScenarioViewSet(viewsets.ModelViewSet):
     serializer_class = SimulationScenarioSerializer
 
 
-@api_view(['GET'])
-def live_status(request):
-    """
-    Combined current-status snapshot for the dashboard.
-    Returns the single latest record from each core table.
-    """
+def _get_live_status_data():
+    """Build the shared live-status snapshot used by dashboard features."""
     weather = WeatherData.objects.first()
     generation = GenerationData.objects.first()
     load = LoadData.objects.first()
@@ -104,7 +108,112 @@ def live_status(request):
             } for a in active_alerts
         ],
     }
-    return Response(data)
+    return data
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def live_status(request):
+    """
+    Combined current-status snapshot for the dashboard.
+    Returns the single latest record from each core table.
+    """
+    return Response(_get_live_status_data())
+
+
+def _format_forecast_summary():
+    forecasts = Forecast.objects.order_by('target_time')[:3]
+    if not forecasts:
+        return "No upcoming forecast data is available."
+
+    forecast_items = []
+    for forecast in forecasts:
+        forecast_items.append(
+            f"{forecast.target_time}: solar {forecast.predicted_solar} kW, "
+            f"wind {forecast.predicted_wind} kW, load {forecast.predicted_load} kW"
+        )
+    return "; ".join(forecast_items)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def ai_insight(request):
+    """
+    Generates a short natural-language insight from the current live system data.
+
+    The forecasting models remain separate: this endpoint only summarizes their
+    existing forecast output through an LLM.
+    """
+    api_key = config("OPENAI_API_KEY", default="").strip()
+    if not api_key:
+        return Response(
+            {"error": "AI insights are not configured. Set OPENAI_API_KEY in backend/.env."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    live_data = _get_live_status_data()
+    decision = live_data.get("current_decision") or {}
+    battery = live_data.get("battery") or {}
+    prompt = f"""You are an energy management assistant.
+
+Given the following live energy system data:
+Solar: {live_data.get('solar_generation_kw', '--')} kW
+Wind: {live_data.get('wind_generation_kw', '--')} kW
+Load: {live_data.get('load_kw', '--')} kW
+Battery: {battery.get('soc_percent', '--')}%
+Current decision: {decision.get('source_selection', '--')}; battery action {decision.get('battery_action', '--')}; grid action {decision.get('grid_action', '--')}
+Upcoming forecast: {_format_forecast_summary()}
+
+Write a short 2-3 sentence, friendly, actionable insight for the system operator.
+
+Do not invent or assume data that is not provided."""
+
+    model = config("OPENAI_MODEL", default="gpt-4o-mini")
+    api_url = config("OPENAI_API_URL", default="https://api.openai.com/v1/chat/completions")
+    request_body = json.dumps({
+        "model": model,
+        "messages": [
+            {"role": "system", "content": "You provide concise, practical energy operations insights."},
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0.3,
+        "max_tokens": 180,
+    }).encode("utf-8")
+
+    llm_request = Request(
+        api_url,
+        data=request_body,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with urlopen(llm_request, timeout=20) as response:
+            llm_data = json.loads(response.read().decode("utf-8"))
+        insight = llm_data["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError, TypeError, json.JSONDecodeError):
+        logger.exception("The LLM returned an unexpected response.")
+        return Response(
+            {"error": "The AI assistant returned an invalid response. Please try again."},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+    except (HTTPError, URLError, TimeoutError, OSError):
+        logger.exception("The LLM request failed.")
+        return Response(
+            {"error": "The AI assistant is temporarily unavailable. Please try again shortly."},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    if not insight:
+        return Response(
+            {"error": "The AI assistant returned an empty insight. Please try again."},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    return Response({"insight": insight})
 
 
 @api_view(['GET'])
