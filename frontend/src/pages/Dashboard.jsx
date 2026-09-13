@@ -2,16 +2,12 @@ import { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import StatusCard from "../components/StatusCard";
 import DigitalTwin from "../components/DigitalTwin";
-import { apiGet } from "../api";
 
 function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [forecastPreview, setForecastPreview] = useState(null);
-  const [aiInsight, setAiInsight] = useState(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState(null);
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/status/live/")
@@ -40,61 +36,12 @@ function Dashboard() {
       });
   }, []);
 
-  const askAi = async () => {
-    setAiLoading(true);
-    setAiError(null);
-    setAiInsight(null);
-
-    try {
-      const response = await apiGet("/ai/insight/");
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result.error || "The AI assistant could not generate an insight.");
-      }
-      setAiInsight(result.insight || "No insight was returned.");
-    } catch (requestError) {
-      setAiError(requestError.message || "Unable to reach the AI assistant.");
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
   const showValue = (val) => (val === null || val === undefined ? "--" : val);
 
   return (
     <div className="page">
       <h1>Dashboard</h1>
       <p className="page-subtitle">Live overview of the microgrid</p>
-
-      <section className="ai-insight-card" aria-live="polite">
-        <div className="ai-insight-header">
-          <div>
-            <p className="eyebrow">AI Insights Assistant</p>
-            <h2>Get a clear read on the current system</h2>
-            <p className="ai-insight-description">
-              Ask for a short, actionable summary based on live generation, load, battery, and forecast data.
-            </p>
-          </div>
-          <button
-            className="scenario-btn active ai-ask-button"
-            type="button"
-            onClick={askAi}
-            disabled={aiLoading}
-            aria-busy={aiLoading}
-          >
-            {aiLoading && <span className="button-spinner" aria-hidden="true" />}
-            {aiLoading ? "Thinking..." : "Ask AI"}
-          </button>
-        </div>
-
-        {aiError && <p className="ai-insight-error">{aiError}</p>}
-        {aiInsight && (
-          <div className="ai-insight-result">
-            <span className="ai-insight-icon" aria-hidden="true">✦</span>
-            <p>{aiInsight}</p>
-          </div>
-        )}
-      </section>
 
       {error && (
         <div className="placeholder-box" style={{ borderColor: "#f87171" }}>
