@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { getUser, logout } from "../api";
+import { NavLink } from "react-router-dom";
 
 const ALL_LINKS = [
   { path: "/", label: "Dashboard", roles: ["admin", "viewer"] },
@@ -11,34 +10,12 @@ const ALL_LINKS = [
   { path: "/analytics", label: "Analytics", roles: ["admin", "viewer"] },
 ];
 
-const ROLE_LABELS = {
-  admin: "Admin",
-  viewer: "Viewer",
-};
-
-const ROLE_COLORS = {
-  admin: "#38bdf8",
-  viewer: "#fbbf24",
-};
-
 function Navbar() {
-  const navigate = useNavigate();
-  const user = getUser();
-  const [loggingOut, setLoggingOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Only two effective roles: anyone who isn't admin is treated as a Viewer
-  const role = user?.role === "admin" ? "admin" : "viewer";
   // Authentication is optional for this dashboard. Keep all routes visible so
   // every existing page remains reachable when no user is stored locally.
   const links = ALL_LINKS;
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    await logout();
-    setLoggingOut(false);
-    navigate("/");
-  };
 
   return (
     <>
@@ -105,28 +82,6 @@ function Navbar() {
           ))}
         </nav>
 
-        <div className="sidebar-footer">
-          {user && (
-            <div
-              className="role-badge"
-              style={{
-                color: ROLE_COLORS[role] || "#38bdf8",
-                borderColor: ROLE_COLORS[role] || "#38bdf8",
-              }}
-            >
-              <span className="role-dot" style={{ backgroundColor: ROLE_COLORS[role] || "#38bdf8" }} />
-              {ROLE_LABELS[role] || role}
-            </div>
-          )}
-          <button
-            className="logout-button"
-            onClick={handleLogout}
-            disabled={loggingOut}
-          >
-            <span aria-hidden="true">↪</span>
-            {loggingOut ? "Logging out..." : "Logout"}
-          </button>
-        </div>
       </aside>
     </>
   );

@@ -200,7 +200,24 @@ Do not invent or assume data that is not provided."""
             {"error": "The AI assistant returned an invalid response. Please try again."},
             status=status.HTTP_502_BAD_GATEWAY,
         )
-    except (HTTPError, URLError, TimeoutError, OSError):
+    except HTTPError as exc:
+        if exc.code in (401, 403):
+            logger.warning("The configured OpenAI credential was rejected with HTTP %s.", exc.code)
+            return Response(
+                {
+                    "error": (
+                        "The configured OpenAI API key was rejected. "
+                        "Update OPENAI_API_KEY in Replit Secrets and try again."
+                    )
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        logger.exception("The LLM request failed with HTTP %s.", exc.code)
+        return Response(
+            {"error": "The AI assistant is temporarily unavailable. Please try again shortly."},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+    except (URLError, TimeoutError, OSError):
         logger.exception("The LLM request failed.")
         return Response(
             {"error": "The AI assistant is temporarily unavailable. Please try again shortly."},

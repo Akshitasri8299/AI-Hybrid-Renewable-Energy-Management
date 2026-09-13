@@ -1,0 +1,1 @@
+- [AI credential verification](ai-credential-verification.md) — a configured secret can still be rejected by the provider; verify the live provider request, not only environment presence.
